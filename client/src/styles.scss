@@ -1,0 +1,161 @@
+// Global theming and base element styles
+@import '~@angular/material/theming';
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core();
+
+// ------------------------------
+// Colors
+// ------------------------------
+
+$color-primary: #102b4e;
+$color-navy: #0c1218;
+$color-cyan-light: #00a9e0;
+$color-cyan-dark: #0276b3;
+$color-sky: #c4d7e5;
+$color-success: #12b664;
+$color-alert: #e58b00;
+$color-urgent: #d00c1b;
+$color-gray-medium: #767676;
+$color-gray-dark: #333333;
+$color-gray-light: #c0c0c0;
+
+// ------------------------------
+// Material Design Theming
+// ------------------------------
+
+$mat-app-primary: (
+  50: #e2e6ea,
+  100: #b7bfca,
+  200: #8895a7,
+  300: #586b83,
+  400: #344b69,
+  500: #102b4e,
+  600: #0e2647,
+  700: #0c203d,
+  800: #091a35,
+  900: #051025,
+  A100: #618bff,
+  A200: #2e66ff,
+  A400: #0043fa,
+  A700: #003ce1,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #ffffff,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #ffffff,
+    A400: #ffffff,
+    A700: #ffffff,
+  )
+);
+
+$mat-app-light: (
+  50: #e0f5fb,
+  100: #b3e5f6,
+  200: #80d4f0,
+  300: #4dc3e9,
+  400: #26b6e5,
+  500: #00a9e0,
+  600: #00a2dc,
+  700: #0098d8,
+  800: #008fd3,
+  900: #007ecb,
+  A100: #f3faff,
+  A200: #c0e4ff,
+  A400: #8dceff,
+  A700: #74c3ff,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  )
+);
+
+$app-primary: mat-palette($mat-app-primary);
+$app-accent: mat-palette($mat-app-light);
+
+$app-theme: mat-light-theme($app-primary, $app-accent);
+@include angular-material-theme($app-theme);
+
+// ------------------------------
+// Material Design Theming
+// ------------------------------
+
+// ------------------------------
+// Breakpoint Definitions
+// Usage: @include breakpoint(xlarge) {}
+// ------------------------------
+
+// ------------------------------
+// SASS Variables
+// ------------------------------
+
+$font-xs: 10px;
+$font-sm: 12px;
+$font-md: 14px;
+$font-lg: 16px;
+$font-xl: 20px;
+
+$weight-thin: 100;
+$weight-light: 300;
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-bold: 700;
+$weight-black: 900;
+
+$stack-arial: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+
+$padding-xs: 4px;
+$padding-sm: 8px;
+$padding-md: 16px;
+$padding-lg: 24px;
+$padding-xl: 40px;
+
+// ------------------------------
+// Basic Markup Styles
+// ------------------------------
+
+body {
+  margin: 0;
+  font-size: 14px;
+  font-family: $stack-arial;
+  font-weight: $weight-regular;
+  color: $color-gray-medium;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+a {
+  text-decoration: none;
+  color: $color-cyan-dark;
+
+  &:hover,
+  &:active,
+  &:focus {
+    color: $color-cyan-light;
+  }
+}
