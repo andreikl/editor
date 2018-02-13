@@ -1,0 +1,9 @@
+<ul class="component controls-grid">
+  <li class="item" 
+    *ngFor="let item of items" 
+    (click)="clickHandler($event, item)"
+    [ngClass]="{'is-active': filter==isActive}">
+    <mat-icon>{{ item.iconPath }}</mat-icon>
+    <span class="name">{{ item.name }}</span>
+  </li>
+</ul>

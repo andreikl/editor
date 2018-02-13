@@ -1,0 +1,33 @@
+@import '../../../styles';
+
+.controls-grid {
+    display: flex;
+    flex-wrap: wrap;
+
+    .item {
+        flex: auto;
+        text-align: center;
+        cursor: pointer;
+        color: $color-cyan-dark;
+
+        &.is-active {
+            color: $color-navy;
+
+            .name {
+                border-bottom-color: $color-navy;
+            }
+        }
+    }
+
+    .mat-icon {
+        display: block;
+        margin: auto;
+    }
+
+    .name {
+        display: inline-block;
+        padding-bottom: 5px;
+        border-bottom: solid 2px transparent;
+        font-size: 11px;
+    }
+}
