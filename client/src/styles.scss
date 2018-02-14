@@ -137,6 +137,14 @@ $padding-xl: 40px;
 // Basic Markup Styles
 // ------------------------------
 
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 body {
   margin: 0;
   font-size: 14px;
@@ -159,4 +167,9 @@ a {
   &:focus {
     color: $color-cyan-light;
   }
+}
+
+h1 {
+  padding: 0px;
+  margin: 0px;
 }

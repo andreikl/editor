@@ -2,8 +2,8 @@
   <li class="item" 
     *ngFor="let item of items" 
     (click)="clickHandler($event, item)"
-    [ngClass]="{'is-active': filter==isActive}">
-    <mat-icon>{{ item.iconPath }}</mat-icon>
+    [ngClass]="{'is-active': item==active}">
+    <mat-icon svgIcon="{{item.id}}"></mat-icon>
     <span class="name">{{ item.name }}</span>
   </li>
 </ul>
