@@ -11,10 +11,10 @@ import { MessageService } from './../../services/message.service';
 export class ControlsGridComponent implements OnInit {
 
   items: ControlItem[] = [
-    { id: "line", name: "Line", isActive: true },
-    { id: "rectangle", name: "Rectangle", isActive: false },
-    { id: "pen", name: "Pen", isActive: false },
-    { id: "grid", name: "Grid", isActive: false }
+    { type: "line", name: "Line", isActive: true },
+    { type: "rectangle", name: "Rectangle", isActive: false },
+    { type: "pen", name: "Pen", isActive: false },
+    { type: "grid", name: "Grid", isActive: false }
   ];
 
   active: ControlItem;

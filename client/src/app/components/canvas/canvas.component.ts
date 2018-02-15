@@ -15,12 +15,18 @@ import { MessageService } from './../../services/message.service';
 import { ControlItem } from './../../models/control-item.model';
 import { Message } from './../../models/message.model';
 
+interface Point {
+  'x': number,
+  'y': number,
+}
+
 interface DrawData {
-  'type': number,
+  'type': string,
   'x1': number,
   'y1': number,
   'x2': number,
   'y2': number
+  'points': Array<Point>;
 }
 
 @Component({
@@ -29,11 +35,12 @@ interface DrawData {
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements OnInit {
+
   @ViewChild('canvas') 
   canvas: ElementRef;
 
-  item: ControlItem;
-  history: Array<DrawData>=[];
+  item: ControlItem = <ControlItem>{ type: "rectangle", name: "Rectangle", isActive: false };
+  history: Array<DrawData> = [];
 
   constructor(private messageService: MessageService) { }
 
@@ -48,23 +55,19 @@ export class CanvasComponent implements OnInit {
       (startEvent: MouseEvent) => {
         const rect = canvas.getBoundingClientRect();
         Observable.fromEvent(document, 'mousemove')
-          .map((event: MouseEvent)  => <DrawData> {
-            'type': 1,
-            'x1': startEvent.pageX - rect.left,
-            'y1': startEvent.pageY - rect.top,
-            'x2': event.pageX - rect.left,
-            'y2': event.pageY - rect.top
+          .map((event: MouseEvent)  => <Point> {
+            'x': event.pageX - rect.left,
+            'y': event.pageY - rect.top
           })
           .takeUntil(Observable.fromEvent(document, 'mouseup'))
-          .do(data => this.drawScene(data))
-          .reduce((x: any, y) => {
-            return !x? y: <DrawData> {
-              'x1': x.x1,
-              'y1': x.y1,
-              'x2': y.x2,
-              'y2': y.y2
-            };
-            }, null)
+          .reduce(this.pointAccumulator.bind(this), <DrawData> {
+            'type': this.item.type,
+            'x1': startEvent.pageX - rect.left,
+            'y1': startEvent.pageY - rect.top,
+            'x2': startEvent.pageX - rect.left,
+            'y2': startEvent.pageY - rect.top,
+            'points': []
+          })
           .subscribe(
             data => {
               this.history.push(data);
@@ -80,24 +83,19 @@ export class CanvasComponent implements OnInit {
       (startEvent: TouchEvent) => {
         const rect = canvas.getBoundingClientRect();
         Observable.fromEvent(document, 'touchmove')
-        .map((event: TouchEvent)  =>  <DrawData> {
-          'type': 1,
-          'x1': startEvent.touches[0].pageX - rect.left,
-          'y1': startEvent.touches[0].pageY - rect.top,
-          'x2': event.touches[0].pageX - rect.left,
-          'y2': event.touches[0].pageY - rect.top
+        .map((event: TouchEvent)  =>  <Point> {
+          'x': event.touches[0].pageX - rect.left,
+          'y': event.touches[0].pageY - rect.top
         })
         .takeUntil(Observable.fromEvent(document, 'touchend'))
-        .do(data => this.drawScene(data))
-        .reduce((x: any, y) => {
-          //console.log(x, y);
-          return !x? y: <DrawData> {
-            'x1': x.x1,
-            'y1': x.y1,
-            'x2': y.x2,
-            'y2': y.y2
-          };
-        }, null)
+        .reduce(this.pointAccumulator.bind(this), <DrawData> {
+          'type': this.item.type,
+          'x1': startEvent.touches[0].pageX - rect.left,
+          'y1': startEvent.touches[0].pageY - rect.top,
+          'x2': startEvent.touches[0].pageX - rect.left,
+          'y2': startEvent.touches[0].pageY - rect.top,
+          'points': []
+        })
         .subscribe(
           data => {
             this.history.push(data);
@@ -107,6 +105,14 @@ export class CanvasComponent implements OnInit {
       },
       e => console.log("touchstartEvent error", e)
     );
+  }
+
+  pointAccumulator(x: DrawData, y: Point): DrawData {
+    x.x2 = y.x;
+    x.y2 = y.y;
+    x.points.push(y);
+    this.drawScene(x);
+    return x;
   }
 
   configureCanvas(canvas) {
@@ -144,7 +150,8 @@ export class CanvasComponent implements OnInit {
     if (data == null) {
       return;
     }
-    switch(this.item.id) {
+
+    switch(data.type) {
       case "line":
         context.beginPath();
         context.moveTo(data.x1, data.y1);
@@ -157,6 +164,15 @@ export class CanvasComponent implements OnInit {
         context.rect(data.x1, data.y1, data.x2 - data.x1, data.y2 - data.y1);
         context.stroke();
         break;
+
+      case "pen":
+        context.beginPath();
+        context.moveTo(data.x1, data.y1);
+        data.points.forEach(o => {
+          context.lineTo(o.x, o.y);
+          context.moveTo(o.x, o.y);
+        });
+        context.stroke();
     }
   }
 }

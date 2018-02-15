@@ -1,5 +1,5 @@
 export class ControlItem {
-  id: string;
+  type: string;
   name: string;
   isActive: boolean = false;
 }
