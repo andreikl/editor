@@ -1,23 +1,23 @@
-import { Injectable } from '@angular/core';
+import 'rxjs/add/operator/filter';
 import { Subject } from 'rxjs/Subject';
+
+import { Injectable } from '@angular/core';
 
 import { Message } from './../models/message.model';
 
 @Injectable()
 export class MessageService {
-  subject = new Subject();
+  subject = new Subject<Message>();
 
   constructor() { }
 
   public send(m: Message) {
-    console.log("MessageService send: ", m);
     this.subject.next(m);
   }
 
-  public subscribe(callback: ((m: Message) => void)) {
-    return this.subject.subscribe(
+  public subscribe(name: string, callback: ((m: Message) => void)) {
+    return this.subject.filter(message => message.name == name).subscribe(
       (m: Message) => {
-        console.log("MessageService message", m);
         callback(m);
       },
       e => console.log("MessageService error", e),

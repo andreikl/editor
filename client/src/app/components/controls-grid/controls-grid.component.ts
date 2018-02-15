@@ -17,10 +17,9 @@ export class ControlsGridComponent implements OnInit {
     { id: "grid", name: "Grid", isActive: false }
   ];
 
-  messageService = new MessageService();
   active: ControlItem;
 
-  constructor() { }
+  constructor(private messageService: MessageService) { }
 
   ngOnInit() { }
  
