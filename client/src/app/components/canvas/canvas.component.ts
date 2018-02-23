@@ -35,6 +35,7 @@ interface DrawData {
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements OnInit {
+  GRID_SIZE: number = 5;
 
   @ViewChild('canvas') 
   canvas: ElementRef;
@@ -61,7 +62,7 @@ export class CanvasComponent implements OnInit {
           })
           .takeUntil(Observable.fromEvent(document, 'mouseup'))
           .reduce(this.pointAccumulator.bind(this), <DrawData> {
-            'type': this.item.type,
+            'type': this.item.id,
             'x1': startEvent.pageX - rect.left,
             'y1': startEvent.pageY - rect.top,
             'x2': startEvent.pageX - rect.left,
@@ -77,7 +78,6 @@ export class CanvasComponent implements OnInit {
       },
       e => console.log("mousedownEvent error", e)
     );
-
 
     const touchEvents$ = Observable.fromEvent(canvas, 'touchstart').subscribe(
       (startEvent: TouchEvent) => {
@@ -135,7 +135,9 @@ export class CanvasComponent implements OnInit {
   drawScene(data: any) {
     const canvas = this.canvas.nativeElement;
     const context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    this.drawGrid(canvas, context);
 
     if (this.item) {
       this.history.forEach(o => {
@@ -146,22 +148,39 @@ export class CanvasComponent implements OnInit {
     }
   }
 
+  drawGrid(canvas, context) {
+    context.beginPath();
+    for (let y = 0; y < canvas.height; y += this.GRID_SIZE) {
+      context.setLineDash([1, this.GRID_SIZE]);
+      context.moveTo(0, y);
+      context.lineTo(canvas.width, y);
+    }
+    context.stroke();
+  }
+
   drawPrimitive(data: DrawData, context) {
+    context.setLineDash([]);
+
     if (data == null) {
       return;
     }
 
+    const x1 = Math.round(data.x1 / this.GRID_SIZE) * this.GRID_SIZE;
+    const y1 = Math.round(data.y1 / this.GRID_SIZE) * this.GRID_SIZE;
+    const x2 = Math.round(data.x2 / this.GRID_SIZE) * this.GRID_SIZE;
+    const y2 = Math.round(data.y2 / this.GRID_SIZE) * this.GRID_SIZE;
+
     switch(data.type) {
       case "line":
         context.beginPath();
-        context.moveTo(data.x1, data.y1);
-        context.lineTo(data.x2, data.y2);
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
         context.stroke();
         break;
 
       case "rectangle":
         context.beginPath();
-        context.rect(data.x1, data.y1, data.x2 - data.x1, data.y2 - data.y1);
+        context.rect(x1, y1, x2 - x1, y2 - y1);
         context.stroke();
         break;
 

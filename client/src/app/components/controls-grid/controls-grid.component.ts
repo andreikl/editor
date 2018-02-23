@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 import { ControlItem } from './../../models/control-item.model';
 import { MessageService } from './../../services/message.service';
@@ -9,13 +9,7 @@ import { MessageService } from './../../services/message.service';
   styleUrls: ['./controls-grid.component.scss']
 })
 export class ControlsGridComponent implements OnInit {
-
-  items: ControlItem[] = [
-    { type: "line", name: "Line", isActive: true },
-    { type: "rectangle", name: "Rectangle", isActive: false },
-    { type: "pen", name: "Pen", isActive: false },
-    { type: "grid", name: "Grid", isActive: false }
-  ];
+  @Input() items: ControlItem[];
 
   active: ControlItem;
 
