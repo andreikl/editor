@@ -40,7 +40,7 @@ export class CanvasComponent implements OnInit {
   @ViewChild('canvas') 
   canvas: ElementRef;
 
-  item: ControlItem = <ControlItem>{ type: "rectangle", name: "Rectangle", isActive: false };
+  item: ControlItem = <ControlItem>{ id: "rectangle", name: "Rectangle", isActive: false };
   history: Array<DrawData> = [];
 
   constructor(private messageService: MessageService) { }
@@ -89,7 +89,7 @@ export class CanvasComponent implements OnInit {
         })
         .takeUntil(Observable.fromEvent(document, 'touchend'))
         .reduce(this.pointAccumulator.bind(this), <DrawData> {
-          'type': this.item.type,
+          'type': this.item.id,
           'x1': startEvent.touches[0].pageX - rect.left,
           'y1': startEvent.touches[0].pageY - rect.top,
           'x2': startEvent.touches[0].pageX - rect.left,
