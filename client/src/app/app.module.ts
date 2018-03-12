@@ -9,6 +9,7 @@ import { ControlsGridComponent } from './components/controls-grid/controls-grid.
 import { CanvasComponent } from './components/canvas/canvas.component';
 
 import { MessageService } from './services/message.service';
+import { AppModel } from './models/app-model';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { MessageService } from './services/message.service';
     MatIconModule
   ],
   providers: [
-    MessageService
+    MessageService,
+    AppModel
   ],
   bootstrap: [AppComponent]
 })
