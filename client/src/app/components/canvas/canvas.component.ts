@@ -14,22 +14,11 @@ import { MessageService } from './../../services/message.service';
 
 import { ControlItem } from './../../models/control-item.model';
 import { Message } from './../../models/message.model';
-import { AppModel } from './../../models/app-model';
 import { Constants } from './../../constants';
 
-interface Point {
-    'x': number,
-    'y': number,
-}
-
-interface DrawData {
-    'type': string,
-    'x1': number,
-    'y1': number,
-    'x2': number,
-    'y2': number
-    'points': Array<Point>;
-}
+import { DrawData } from '../../models/draw-data.interface';
+import { Point } from '../../models/point.interface';
+import { AppModel } from './../../models/app.model';
 
 @Component({
     selector: 'app-canvas',
@@ -44,7 +33,6 @@ export class CanvasComponent implements OnInit {
     canvas: ElementRef;
 
     item: ControlItem = <ControlItem>{ id: "rectangle", name: "Rectangle", isActive: false };
-    history: Array<DrawData> = [];
 
     constructor(private messageService: MessageService, private appModel: AppModel) { }
 
@@ -55,6 +43,7 @@ export class CanvasComponent implements OnInit {
         this.messageService.subscribe("size", this.resizeMessage.bind(this));
         this.messageService.subscribe("control-item", this.changeItem.bind(this));
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, this.onModelChanging.bind(this));
+
 
         const mouseEvents$ = Observable.fromEvent(canvas, 'mousedown').subscribe(
             (startEvent: MouseEvent) => {
@@ -75,7 +64,7 @@ export class CanvasComponent implements OnInit {
                     })
                     .subscribe(
                         data => {
-                            this.history.push(data);
+                            this.appModel.data.push(data);
                         },
                         e => console.log("moveEvent error", e)
                     );
@@ -102,7 +91,7 @@ export class CanvasComponent implements OnInit {
                 })
                 .subscribe(
                     data => {
-                        this.history.push(data);
+                        this.appModel.data.push(data);
                     },
                     e => console.log("moveEvent error", e)
                 );
@@ -151,7 +140,7 @@ export class CanvasComponent implements OnInit {
       this.drawGrid(canvas, context, zoom);
 
       if (this.item) {
-          this.history.forEach(o => {
+          this.appModel.data.forEach(o => {
               this.drawPrimitive(o, context, zoom);
           })
 

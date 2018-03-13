@@ -2,8 +2,11 @@ import { Component, Input, OnInit } from '@angular/core';
 
 import { ControlItem } from './../../models/control-item.model';
 import { MessageService } from './../../services/message.service';
+import { SvgService } from './../../services/svg.service';
 
-import { AppModel } from './../../models/app-model';
+
+import { AppModel } from './../../models/app.model';
+import { Constants } from '../../constants';
 
 @Component({
     selector: 'app-controls-grid',
@@ -15,7 +18,10 @@ export class ControlsGridComponent implements OnInit {
 
     active: ControlItem;
 
-    constructor(private messageService: MessageService, private appModel: AppModel) { }
+    constructor(private messageService: MessageService,
+        private svgService: SvgService,
+        private appModel: AppModel) {
+    }
 
     ngOnInit() { }
 
@@ -27,11 +33,14 @@ export class ControlsGridComponent implements OnInit {
         this.messageService.send({name: "control-item", data: item});
 
         switch (item.id) {
-            case PLUS:
+            case Constants.ID_PLUS:
                 return this.appModel.zoom = this.appModel.zoom + 0.1;
 
-            case MINUS:
+            case Constants.ID_MINUS:
                 return this.appModel.zoom = this.appModel.zoom - 0.1;
+            
+            case Constants.ID_SAVE:
+                return this.svgService.save();
         };
     }
 }

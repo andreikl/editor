@@ -9,25 +9,27 @@ import { ControlsGridComponent } from './components/controls-grid/controls-grid.
 import { CanvasComponent } from './components/canvas/canvas.component';
 
 import { MessageService } from './services/message.service';
-import { AppModel } from './models/app-model';
+import { SvgService } from './services/svg.service';
+import { AppModel } from './models/app.model';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    ControlsGridComponent,
-    CanvasComponent
-  ],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
+    declarations: [
+        AppComponent,
+        ControlsGridComponent,
+        CanvasComponent
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
 
-    // -- Material Design
-    MatIconModule
-  ],
-  providers: [
-    MessageService,
-    AppModel
-  ],
-  bootstrap: [AppComponent]
+        // -- Material Design
+        MatIconModule
+    ],
+    providers: [
+        MessageService,
+        SvgService,
+        AppModel
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -4,47 +4,43 @@ import { MatIconRegistry } from '@angular/material';
 
 import { MessageService } from './services/message.service';
 import { ControlItem } from './models/control-item.model';
+import { Constants } from './constants';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  title = 'Editor';
+    title = Constants.APP_TITLE;
+    toolItems = Constants.TOOL_ITEMS;
+    canvasItems = Constants.CANVAS_ITEMS;
 
-  toolItems = [
-    { id: "line", name: "Line", isActive: true },
-    { id: "rectangle", name: "Rectangle", isActive: false },
-    { id: "pen", name: "Pen", isActive: false },
-  ];
+    constructor (iconRegistry: MatIconRegistry,
+        sanitizer: DomSanitizer,
+        private messageService: MessageService) {
 
-  canvasItems = [
-    { id: "plus", name: "Zoom In", isActive: false },
-    { id: "minus", name: "Zoom Out", isActive: false },
-    { id: "grid", name: "Grid", isActive: false }
-  ];
+        iconRegistry.addSvgIcon(Constants.ID_LINE, sanitizer.bypassSecurityTrustResourceUrl('/assets/line.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_RECTANGLE, sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_PEN, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_GRID, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_PLUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
+    }
 
-  constructor (iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private messageService: MessageService) {
-    iconRegistry.addSvgIcon('line', sanitizer.bypassSecurityTrustResourceUrl('/assets/line.svg'));
-    iconRegistry.addSvgIcon('rectangle', sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
-    iconRegistry.addSvgIcon('pen', sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
-    iconRegistry.addSvgIcon('grid', sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
-    iconRegistry.addSvgIcon('plus', sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
-    iconRegistry.addSvgIcon('minus', sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
-  }
+    ngOnInit() {
+    }
 
-  ngOnInit() {
-  }
-
-  @HostListener('window:resize', ['$event'])
-  OnResize(event) {
-    this.messageService.send({
-      name: "size",
-      data: {
-        width: event.target.innerWidth,
-        height: event.target.innerHeight,
-      }
-    });
-  }
+    @HostListener('window:resize', ['$event'])
+    OnResize(event) {
+        this.messageService.send({
+            name: "size",
+            data: {
+                width: event.target.innerWidth,
+                height: event.target.innerHeight,
+            }
+        });
+    }
 }
