@@ -66,18 +66,22 @@ export class CanvasComponent implements OnInit {
                     'y1': y,
                     'x2': x,
                     'y2': y,
-                    'points': []
+                    'points': [],
+                    isActive: false
                 }
             } else {
                 const x = normalise(start.x - rect.left, this.appModel.offset.x, true);
                 const y = normalise(start.y - rect.top, this.appModel.offset.y, true);
+                //remove all acive items
+                this.appModel.data.forEach(o => o.isActive = false);
                 return {
                     'type': this.item.id,
                     'x1': x,
                     'y1': y,
                     'x2': x,
                     'y2': y,
-                    'points': []
+                    'points': [],
+                    isActive: true
                 }
                     
             }
@@ -95,10 +99,13 @@ export class CanvasComponent implements OnInit {
                 x.y2 = y.y;
                 this.drawScene(null);
             } else {
-                x.x2 = normalise(y.x, this.appModel.offset.x, true);
-                x.y2 = normalise(y.y, this.appModel.offset.y, true);
+                x.x2 = y.x = normalise(y.x, this.appModel.offset.x, true);
+                x.y2 = y.y = normalise(y.y, this.appModel.offset.y, true);
 
-                if (x.points.length > 0 && (x.points[0].x != x.x2 || x.points[0].y != x.y2)) {
+                const lastIndex = x.points.length - 1;
+                if (lastIndex >= 0 && (x.points[lastIndex].x != y.x || x.points[lastIndex].y != y.y)) {
+                    x.points.push(y);
+                } else if (x.points.length == 0) {
                     x.points.push(y);
                 }
                 this.drawScene(x);
@@ -214,6 +221,60 @@ export class CanvasComponent implements OnInit {
             context.lineTo(canvas.width, y);
         }
         context.stroke();
+        context.setLineDash([]);
+    }
+
+    drawLine(x1, y1, x2, y2, data, context) {
+        if (data.isActive) {
+            context.beginPath();
+            context.arc(x1, y1, 4, 0, 2 * Math.PI);
+            context.stroke();
+            context.beginPath();
+            context.arc(x2, y2, 4, 0, 2 * Math.PI);
+            context.stroke();
+        }
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+    }
+
+    drawRect(x1, y1, x2, y2, data, context) {
+        if (data.isActive) {
+            context.beginPath();
+            context.arc(x1, y1, 4, 0, 2 * Math.PI);
+            context.stroke();
+            context.beginPath();
+            context.arc(x2, y2, 4, 0, 2 * Math.PI);
+            context.stroke();
+        }
+        context.beginPath();
+        context.rect(x1, y1, x2 - x1, y2 - y1);
+        context.stroke();
+    }
+
+    drawPen(x1, y1, x2, y2, data, context) {
+        if (data.isActive) {
+            context.beginPath();
+            context.arc(x1, y1, 4, 0, 2 * Math.PI);
+            context.stroke();
+            data.points.forEach((o, index) => {
+                const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
+                const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
+                context.beginPath();
+                context.arc(x, y, 4, 0, 2 * Math.PI);
+                context.stroke();
+            });
+        } 
+        context.beginPath();
+        context.moveTo(x1, y1);
+        data.points.forEach((o, index) => {
+            const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
+            const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
+            context.lineTo(x, y);
+            context.moveTo(x, y);
+        });
+        context.stroke();
     }
 
     drawPrimitive(data: DrawData, context) {
@@ -222,29 +283,15 @@ export class CanvasComponent implements OnInit {
         const x2 = this.appModel.zoom * (this.appModel.offset.x + data.x2);
         const y2 = this.appModel.zoom * (this.appModel.offset.y + data.y2);
 
-        context.setLineDash([]);
         switch(data.type) {
             case Constants.ID_LINE:
-                context.beginPath();
-                context.moveTo(x1, y1);
-                context.lineTo(x2, y2);
-                context.stroke();
-                break;
+                return this.drawLine(x1, y1, x2, y2, data, context);
 
             case Constants.ID_RECTANGLE:
-                context.beginPath();
-                context.rect(x1, y1, x2 - x1, y2 - y1);
-                context.stroke();
-                break;
+                return this.drawRect(x1, y1, x2, y2, data, context);
 
             case Constants.ID_PEN:
-                context.beginPath();
-                context.moveTo(data.x1 * this.appModel.zoom, data.y1 * this.appModel.zoom);
-                data.points.forEach(o => {
-                    context.lineTo(o.x, o.y);
-                    context.moveTo(o.x, o.y);
-                });
-                context.stroke();
+                return this.drawPen(x1, y1, x2, y2, data, context);
         }
     }
 }
