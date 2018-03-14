@@ -106,8 +106,10 @@ export class CanvasComponent implements OnInit {
             return x;
         }
     
-        const mouseEvents$ = Observable.fromEvent(canvas, 'mousedown').subscribe(
+        Observable.fromEvent(canvas, 'mousedown').subscribe(
             (startEvent: MouseEvent) => {
+                startEvent.preventDefault();
+                startEvent.stopPropagation();
                 const rect = canvas.getBoundingClientRect();
                 Observable.fromEvent(document, 'mousemove')
                     .map((event: MouseEvent)  => <Point> {
@@ -127,8 +129,10 @@ export class CanvasComponent implements OnInit {
             e => console.log("mousedownEvent error", e)
         );
 
-        const touchEvents$ = Observable.fromEvent(canvas, 'touchstart').subscribe(
+        Observable.fromEvent(canvas, 'touchstart').subscribe(
             (startEvent: TouchEvent) => {
+                startEvent.preventDefault();
+                startEvent.stopPropagation();
                 const rect = canvas.getBoundingClientRect();
                 Observable.fromEvent(document, 'touchmove')
                     .map((event: TouchEvent)  =>  <Point> {
@@ -146,6 +150,15 @@ export class CanvasComponent implements OnInit {
                     );
             },
             e => console.log("touchstartEvent error", e)
+        );
+
+        Observable.fromEvent(canvas, 'wheel').subscribe(
+            (wheelEvent: WheelEvent) => {
+                wheelEvent.preventDefault();
+                wheelEvent.stopPropagation();
+                this.appModel.zoom += wheelEvent.wheelDelta > 0? Constants.ZOOM_DELATA: -Constants.ZOOM_DELATA;
+            },
+            e => console.log("wheelEvent error", e)
         );
     }
 
