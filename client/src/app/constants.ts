@@ -1,7 +1,7 @@
 export class Constants {
     static APP_TITLE = 'Editor';
 
-    static EVENT_MODEL_CHANGED = 'model-changing';
+    static EVENT_MODEL_CHANGED = 'model-changed';
     static EVENT_ZOOM = 'zoom';
 
     static ID_LINE = 'line';

@@ -21,14 +21,16 @@ export abstract class BaseModel {
                         return that[PROP_PREFIX + name];
                     },
                     set: (value) => {
+                        const oldValue = that[PROP_PREFIX + name];
+                        that[PROP_PREFIX + name] = value;
                         that.messageService.send({
                             name: Constants.EVENT_MODEL_CHANGED,
                             data: {
                                 name: name,
-                                value: value
+                                value: value,
+                                oldValue: oldValue
                             }
                         });
-                        that[PROP_PREFIX + name] = value;
                     }
                 });
             });

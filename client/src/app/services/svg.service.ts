@@ -8,19 +8,19 @@ import { Constants } from '../constants';
 export class SvgService {
     constructor(private appModel: AppModel) { }
 
-    private getHeader() {
-        const normalize = (data) => {
-            return <DrawData> {
-                x1: data.x1 < data.x2? data.x1: data.x2,
-                y1: data.y1 < data.y2? data.y1: data.y2,
-                x2: data.x1 > data.x2? data.x1: data.x2,
-                y2: data.y1 > data.y2? data.y1: data.y2
-            }
-        };
+    private normalize(data) {
+        return <DrawData> {
+            x1: data.x1 < data.x2? data.x1: data.x2,
+            y1: data.y1 < data.y2? data.y1: data.y2,
+            x2: data.x1 > data.x2? data.x1: data.x2,
+            y2: data.y1 > data.y2? data.y1: data.y2
+        }
+    }
 
+    private getHeader() {
         const r = this.appModel.data.reduce((x, y) => {
-            x = normalize(x);
-            y = normalize(y);
+            x = this.normalize(x);
+            y = this.normalize(y);
             return {
                 x1: x.x1 < y.x1? x.x1: y.x1,
                 y1: x.y1 < y.y1? x.y1: y.y1,
@@ -42,6 +42,10 @@ export class SvgService {
             switch (o.type) {
                 case Constants.ID_LINE:
                     return '<line id="svg_' + index + '" x1="' + o.x1 + '" y1="' + o.y1 + '" x2="' + o.x2 + '" y2="' + o.y2 + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+
+                case Constants.ID_RECTANGLE:
+                    const no = this.normalize(o);
+                    return '<rect id="svg_' + index + '" x="' + no.x1 + '" y="' + no.y1 + '" width="' + (no.x2 - no.x1) + '" height="' + (no.y2 - no.y1) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 default:
                     return '';
