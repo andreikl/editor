@@ -104,7 +104,6 @@ export class CanvasComponent implements OnInit {
 
         const pointAccumulator = (x: DrawData, y: Point): DrawData => {
             if (draggablePoint) {
-                console.log("pointAccumulator");
                 draggablePoint.point.x = toNormal(y.x, this.appModel.offset.x, false);
                 draggablePoint.point.y = toNormal(y.y, this.appModel.offset.y, false);
                 this.drawScene(null);
@@ -132,11 +131,17 @@ export class CanvasComponent implements OnInit {
             return x;
         }
 
-        const addPrimitive = (data) => {
-            if (data.type != Constants.ID_MOVE && !draggablePoint) {
-                this.appModel.data.push(data);
+        const addPrimitive = (data: DrawData) => {
+            if (draggablePoint) {
+                draggablePoint = undefined;
+            } else {
+                // check if it is just a click
+                if (data.end.x - data.start.x < Constants.MINIMAL_SIZE && data.end.y - data.start.y < Constants.MINIMAL_SIZE) {
+                    this.selectPrimitive(data);
+                } else if (data.type != Constants.ID_MOVE) {
+                    this.appModel.data.push(data);
+                }
             }
-            draggablePoint = undefined;
         }
 
         Observable.fromEvent(canvas, 'mousedown').subscribe(
@@ -253,6 +258,60 @@ export class CanvasComponent implements OnInit {
         this.drawScene(null);
     }
 
+    selectPrimitive(data: DrawData) {
+        const area = (x1, y1, x2, y2, x3, y3) => {
+            return Math.abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
+        }
+
+        const testLine = (points, point) => {
+            /* Calculate area of rectangle ABCD */
+            const a = area(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y)
+                + area(points[0].x, points[0].y, points[3].x, points[3].y, points[2].x, points[2].y);
+
+            /* Calculate area of triangle PAB */
+            const a1 = area(point.x, point.y, points[0].x, points[0].y, points[1].x, points[1].y);
+            /* Calculate area of triangle PBC */
+            const a2 = area(point.x, point.y, points[1].x, points[1].y, points[2].x, points[2].y);
+            /* Calculate area of triangle PCD */
+            const a3 = area(point.x, point.y, points[2].x, points[2].y, points[3].x, points[3].y);
+            /* Calculate area of triangle PAD */
+            const a4 = area(point.x, point.y, points[0].x, points[0].y, points[3].x, points[3].y);
+
+            return (Math.round(a) == Math.round(a1 + a2 + a3 + a4));
+        }
+
+        this.selectedPrimitive = this.appModel.data.find(o => {
+            switch(o.type) {
+                case Constants.ID_LINE:
+                    return testLine([
+                        {
+                            'x': o.start.x - Constants.SELECTION_CIRCLE,
+                            'y': o.start.y - Constants.SELECTION_CIRCLE
+                        }, {
+                            'x': o.start.x - Constants.SELECTION_CIRCLE,
+                            'y': o.start.y + Constants.SELECTION_CIRCLE
+                        }, {
+                            'x': o.end.x - Constants.SELECTION_CIRCLE,
+                            'y': o.end.y + Constants.SELECTION_CIRCLE
+                        }, {
+                            'x': o.end.x - Constants.SELECTION_CIRCLE,
+                            'y': o.end.y - Constants.SELECTION_CIRCLE
+                        }
+                    ], data.start);
+    
+                case Constants.ID_RECTANGLE:
+                    return false;
+    
+                case Constants.ID_PEN:
+                    return false;
+
+                default:
+                    return false;
+            }
+        });
+        this.drawScene(null);
+    }
+
     drawScene(data: DrawData | null) {
         const canvas = this.canvas.nativeElement;
         const context = canvas.getContext("2d");
@@ -260,10 +319,9 @@ export class CanvasComponent implements OnInit {
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         this.drawGrid(canvas, context);
-
         this.appModel.data.forEach(o => {
             this.drawPrimitive(o, context);
-        })
+        });
 
         if (data) {
             this.drawPrimitive(data, context);

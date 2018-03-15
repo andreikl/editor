@@ -17,6 +17,7 @@ export class Constants {
     static DEFAULT_GRID = 5.0;
     static DEFAULT_ZOOM = 10.0;
     static SELECTION_CIRCLE = 4;
+    static MINIMAL_SIZE = 4;
 
     static SVG_FILENAME = 'svgfile.svg';
 
