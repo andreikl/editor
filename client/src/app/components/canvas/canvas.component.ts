@@ -20,19 +20,30 @@ import { DrawData } from '../../models/draw-data.interface';
 import { Point } from '../../models/point.interface';
 import { AppModel } from './../../models/app.model';
 
+enum PointType {
+    StartPoint,
+    MiddlePoint,
+    EndPoint
+};
+
+interface DraggablePoint {
+    direction: PointType;
+    point: Point;
+    primitive: DrawData;
+};
+
 @Component({
     selector: 'app-canvas',
     templateUrl: './canvas.component.html',
     styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements OnInit {
-    GRID_SIZE: number = 5;
-    scale: number = 1;
-
     @ViewChild('canvas') 
     canvas: ElementRef;
 
     item: ControlItem = <ControlItem>{ id: "rectangle", name: "Rectangle", isActive: false };
+    selectedPrimitive?: DrawData;
+    draggablePoint?: DraggablePoint;
 
     constructor(private messageService: MessageService, private appModel: AppModel) { }
 
@@ -40,79 +51,94 @@ export class CanvasComponent implements OnInit {
         const canvas = this.canvas.nativeElement;
         this.configureCanvas(canvas);
 
-        this.messageService.subscribe("size", this.resizeMessage.bind(this));
-        this.messageService.subscribe("control-item", this.changeItem.bind(this));
-        this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, this.onModelChanged.bind(this));
+        let draggablePoint;
 
-        const addPrimitive = (data) => {
-            if (data.type != Constants.ID_MOVE) {
-                this.appModel.data.push(data);
+        this.messageService.subscribe("size", (message) => {
+            this.configureCanvas(this.canvas.nativeElement);
+        });
+        this.messageService.subscribe("control-item", (message) => {
+            this.item = message.data;
+        });
+        this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
+            switch (message.data.name) {
+                case Constants.EVENT_ZOOM:
+                    this.drawScene(null);
             }
-        }
+        });
 
         // convert point to normalised coordinate space
-        const normalise = (value: number, offset: number, isGrid?: Boolean): number => {
-            const nv = value / this.appModel.zoom - offset;
-            return isGrid? this.GRID_SIZE * Math.round(nv / this.GRID_SIZE): nv;
+        const toNormal = (value: number, offset: number, isGrid?: Boolean): number => {
+            const nv = (value - offset) / this.appModel.zoom;
+            return isGrid? this.appModel.grid * Math.round(nv / this.appModel.grid): nv;
+        }
+
+        const fromNormal = (value: number, offset: number): number => {
+            return (value + offset) * this.appModel.zoom;
         }
 
         const pointInitiator = (start: Point, rect): DrawData => {
-            if ((this.item.id == Constants.ID_MOVE)) {
+            if (this.draggablePoint) {
+                draggablePoint = this.draggablePoint || draggablePoint;
+                return draggablePoint;
+            } else if ((this.item.id == Constants.ID_MOVE)) {
                 const x = start.x - rect.left;
                 const y = start.y - rect.top;
                 return {
                     'type': this.item.id,
-                    'x1': x,
-                    'y1': y,
-                    'x2': x,
-                    'y2': y,
-                    'points': [],
-                    isActive: false
+                    'start': { 'x': x, 'y': y },
+                    'end': { 'x': x, 'y': y },
+                    'points': []
                 }
             } else {
-                const x = normalise(start.x - rect.left, this.appModel.offset.x, true);
-                const y = normalise(start.y - rect.top, this.appModel.offset.y, true);
-                //remove all acive items
-                this.appModel.data.forEach(o => o.isActive = false);
-                return {
+                const x = toNormal(start.x - rect.left, this.appModel.offset.x, false);
+                const y = toNormal(start.y - rect.top, this.appModel.offset.y, false);
+                this.selectedPrimitive = {
                     'type': this.item.id,
-                    'x1': x,
-                    'y1': y,
-                    'x2': x,
-                    'y2': y,
-                    'points': [],
-                    isActive: true
+                    'start': { 'x': x, 'y': y },
+                    'end': { 'x': x, 'y': y },
+                    'points': []
                 }
-                    
+                return this.selectedPrimitive;
             }
         }
 
         const pointAccumulator = (x: DrawData, y: Point): DrawData => {
-            if ((this.item.id == Constants.ID_MOVE)) {
+            if (draggablePoint) {
+                console.log("pointAccumulator");
+                draggablePoint.point.x = toNormal(y.x, this.appModel.offset.x, false);
+                draggablePoint.point.y = toNormal(y.y, this.appModel.offset.y, false);
+                this.drawScene(null);
+            } else if ((this.item.id == Constants.ID_MOVE)) {
                 this.appModel.offset = {
-                    x: this.appModel.offset.x + (y.x - x.x2) / this.appModel.zoom,
-                    y: this.appModel.offset.y + (y.y - x.y2) / this.appModel.zoom
+                    x: this.appModel.offset.x + (y.x - x.end.x) / this.appModel.zoom,
+                    y: this.appModel.offset.y + (y.y - x.end.y) / this.appModel.zoom
                 }
-                console.log('x: ' + (y.x - x.x2) + ' ' + y.x + ' ' + x.x2 + 'y: ' + (y.y - x.y2));
-                console.log(this.appModel.offset);
-                x.x2 = y.x;
-                x.y2 = y.y;
+                x.end.x = y.x;
+                x.end.y = y.y;
                 this.drawScene(null);
             } else {
-                x.x2 = y.x = normalise(y.x, this.appModel.offset.x, true);
-                x.y2 = y.y = normalise(y.y, this.appModel.offset.y, true);
-
-                const lastIndex = x.points.length - 1;
-                if (lastIndex >= 0 && (x.points[lastIndex].x != y.x || x.points[lastIndex].y != y.y)) {
-                    x.points.push(y);
-                } else if (x.points.length == 0) {
-                    x.points.push(y);
+                x.end.x = y.x = toNormal(y.x, this.appModel.offset.x, false);
+                x.end.y = y.y = toNormal(y.y, this.appModel.offset.y, false);
+                if (this.item.id == Constants.ID_PEN) {
+                    const lastIndex = x.points.length - 1;
+                    if (lastIndex >= 0 && (x.points[lastIndex].x != y.x || x.points[lastIndex].y != y.y)) {
+                        x.points.push(y);
+                    } else if (x.points.length == 0) {
+                        x.points.push(y);
+                    }
                 }
                 this.drawScene(x);
             }
             return x;
         }
-    
+
+        const addPrimitive = (data) => {
+            if (data.type != Constants.ID_MOVE && !draggablePoint) {
+                this.appModel.data.push(data);
+            }
+            draggablePoint = undefined;
+        }
+
         Observable.fromEvent(canvas, 'mousedown').subscribe(
             (startEvent: MouseEvent) => {
                 startEvent.preventDefault();
@@ -163,10 +189,61 @@ export class CanvasComponent implements OnInit {
             (wheelEvent: WheelEvent) => {
                 wheelEvent.preventDefault();
                 wheelEvent.stopPropagation();
-                this.appModel.zoom += wheelEvent.wheelDelta > 0? Constants.ZOOM_DELATA: -Constants.ZOOM_DELATA;
+                this.appModel.zoom += wheelEvent.wheelDelta > 0? Constants.DEFAULT_ZOOM_DELATA: -Constants.DEFAULT_ZOOM_DELATA;
             },
             e => console.log("wheelEvent error", e)
         );
+
+        Observable.fromEvent(canvas, 'mousemove')
+            .map((event: MouseEvent) => {
+                if (this.selectedPrimitive) {
+                    const rect = canvas.getBoundingClientRect();
+                    const sc = Constants.SELECTION_CIRCLE;
+                    const x = event.pageX - rect.left;
+                    const y = event.pageY - rect.top;
+
+                    const x1 = fromNormal(this.selectedPrimitive.start.x, this.appModel.offset.x);
+                    const y1 = fromNormal(this.selectedPrimitive.start.y, this.appModel.offset.y);
+                    const x2 = fromNormal(this.selectedPrimitive.end.x, this.appModel.offset.x);
+                    const y2 = fromNormal(this.selectedPrimitive.end.y, this.appModel.offset.y);
+                    if (x >= x1 - sc && x <= x1 + sc && y >= y1 - sc && y <= y1 + sc) {
+                        return <DraggablePoint> {
+                            'point': this.selectedPrimitive.start,
+                            'direction': PointType.StartPoint,
+                            'primitive': this.selectedPrimitive
+                        };
+                    } else if (x >= x2 - sc && x <= x2 + sc && y >= y2 - sc && y <= y2 + sc) {
+                        return <DraggablePoint> {
+                            'point': this.selectedPrimitive.end,
+                            'direction': PointType.EndPoint,
+                            'primitive': this.selectedPrimitive
+                        };
+                    } else {
+                        return this.selectedPrimitive.points.filter(point => {
+                            const px = fromNormal(point.x, this.appModel.offset.x);
+                            const py = fromNormal(point.y, this.appModel.offset.y);
+                            return x >= px - sc && x <= px + sc && y >= py - sc && y <= py + sc;
+                        }).map(point => <DraggablePoint> {
+                            'point': point,
+                            'direction': PointType.MiddlePoint,
+                            'primitive': this.selectedPrimitive
+                        }).find(point => true);
+                    }
+                }
+                return undefined;
+            })
+            .subscribe(
+                o => {
+                    if (o != undefined) {
+                        this.canvas.nativeElement.style.cursor = 'move';
+                        this.draggablePoint = o;
+                    } else {
+                        this.canvas.nativeElement.style.cursor = 'auto';
+                        this.draggablePoint = undefined;
+                    }
+                },
+                e => console.log("wheelEvent error", e)
+            );
     }
 
     configureCanvas(canvas) {
@@ -174,22 +251,6 @@ export class CanvasComponent implements OnInit {
         canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
         canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
         this.drawScene(null);
-    }
-
-    resizeMessage(message: Message) {
-        const canvas = this.canvas.nativeElement;
-        this.configureCanvas(canvas);
-    }
-
-    changeItem(message: Message) {
-        this.item = message.data;
-    }
-
-    onModelChanged(message: Message) {
-        switch (message.data.name) {
-            case Constants.EVENT_ZOOM:
-                this.drawScene(null);
-        }
     }
 
     drawScene(data: DrawData | null) {
@@ -207,16 +268,18 @@ export class CanvasComponent implements OnInit {
         if (data) {
             this.drawPrimitive(data, context);
         }
+
+        this.drawSelection(context);
     }
 
     drawGrid(canvas, context) {
         const constOffsetDelta = {
-            x: this.appModel.offset.x % this.GRID_SIZE * this.appModel.zoom,
-            y: this.appModel.offset.y % this.GRID_SIZE * this.appModel.zoom,
+            x: this.appModel.offset.x % this.appModel.grid * this.appModel.zoom,
+            y: this.appModel.offset.y % this.appModel.grid * this.appModel.zoom,
         };
         context.beginPath();
-        for (let y = constOffsetDelta.y; y < canvas.height; y += this.GRID_SIZE * this.appModel.zoom) {
-            context.setLineDash([1, this.GRID_SIZE * this.appModel.zoom - 1]);
+        for (let y = constOffsetDelta.y; y < canvas.height; y += this.appModel.grid * this.appModel.zoom) {
+            context.setLineDash([1, this.appModel.grid * this.appModel.zoom - 1]);
             context.moveTo(constOffsetDelta.x, y);
             context.lineTo(canvas.width, y);
         }
@@ -225,14 +288,6 @@ export class CanvasComponent implements OnInit {
     }
 
     drawLine(x1, y1, x2, y2, data, context) {
-        if (data.isActive) {
-            context.beginPath();
-            context.arc(x1, y1, 4, 0, 2 * Math.PI);
-            context.stroke();
-            context.beginPath();
-            context.arc(x2, y2, 4, 0, 2 * Math.PI);
-            context.stroke();
-        }
         context.beginPath();
         context.moveTo(x1, y1);
         context.lineTo(x2, y2);
@@ -240,32 +295,12 @@ export class CanvasComponent implements OnInit {
     }
 
     drawRect(x1, y1, x2, y2, data, context) {
-        if (data.isActive) {
-            context.beginPath();
-            context.arc(x1, y1, 4, 0, 2 * Math.PI);
-            context.stroke();
-            context.beginPath();
-            context.arc(x2, y2, 4, 0, 2 * Math.PI);
-            context.stroke();
-        }
         context.beginPath();
         context.rect(x1, y1, x2 - x1, y2 - y1);
         context.stroke();
     }
 
     drawPen(x1, y1, x2, y2, data, context) {
-        if (data.isActive) {
-            context.beginPath();
-            context.arc(x1, y1, 4, 0, 2 * Math.PI);
-            context.stroke();
-            data.points.forEach((o, index) => {
-                const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
-                const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
-                context.beginPath();
-                context.arc(x, y, 4, 0, 2 * Math.PI);
-                context.stroke();
-            });
-        } 
         context.beginPath();
         context.moveTo(x1, y1);
         data.points.forEach((o, index) => {
@@ -277,11 +312,35 @@ export class CanvasComponent implements OnInit {
         context.stroke();
     }
 
+    drawSelection(context) {
+        if (this.selectedPrimitive) {
+            const x1 = this.appModel.zoom * (this.appModel.offset.x + this.selectedPrimitive.start.x);
+            const y1 = this.appModel.zoom * (this.appModel.offset.y + this.selectedPrimitive.start.y);
+            const x2 = this.appModel.zoom * (this.appModel.offset.x + this.selectedPrimitive.end.x);
+            const y2 = this.appModel.zoom * (this.appModel.offset.y + this.selectedPrimitive.end.y);
+
+            context.beginPath();
+            context.arc(x1, y1, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
+            context.stroke();
+            context.beginPath();
+            context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
+            context.stroke();
+
+            this.selectedPrimitive.points.forEach((o, index) => {
+                const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
+                const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
+                context.beginPath();
+                context.arc(x, y, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
+                context.stroke();
+            });
+        }
+    }
+
     drawPrimitive(data: DrawData, context) {
-        const x1 = this.appModel.zoom * (this.appModel.offset.x + data.x1);
-        const y1 = this.appModel.zoom * (this.appModel.offset.y + data.y1);
-        const x2 = this.appModel.zoom * (this.appModel.offset.x + data.x2);
-        const y2 = this.appModel.zoom * (this.appModel.offset.y + data.y2);
+        const x1 = this.appModel.zoom * (this.appModel.offset.x + data.start.x);
+        const y1 = this.appModel.zoom * (this.appModel.offset.y + data.start.y);
+        const x2 = this.appModel.zoom * (this.appModel.offset.x + data.end.x);
+        const y2 = this.appModel.zoom * (this.appModel.offset.y + data.end.y);
 
         switch(data.type) {
             case Constants.ID_LINE:

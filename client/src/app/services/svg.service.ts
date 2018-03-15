@@ -10,10 +10,14 @@ export class SvgService {
 
     private normalize(data) {
         return <DrawData> {
-            x1: data.x1 < data.x2? data.x1: data.x2,
-            y1: data.y1 < data.y2? data.y1: data.y2,
-            x2: data.x1 > data.x2? data.x1: data.x2,
-            y2: data.y1 > data.y2? data.y1: data.y2
+            'start': {
+                'x': data.start.x < data.end.x? data.start.x: data.end.x,
+                'y': data.start.y < data.end.y? data.start.y: data.end.y
+            },
+            'end': {
+                'x': data.start.x > data.end.x? data.start.x: data.end.x,
+                'y': data.start.y > data.end.y? data.start.y: data.end.y
+            }
         }
     }
 
@@ -21,31 +25,44 @@ export class SvgService {
         const r = this.appModel.data.reduce((x, y) => {
             x = this.normalize(x);
             y = this.normalize(y);
-            return {
-                x1: x.x1 < y.x1? x.x1: y.x1,
-                y1: x.y1 < y.y1? x.y1: y.y1,
-                x2: x.x2 > y.x2? x.x2: y.x2,
-                y2: x.y2 > y.y2? x.y2: y.y2,
+            return <DrawData> {
+                'start': {
+                    'x': x.start.x < y.start.x? x.start.x: y.start.x,
+                    'y': x.start.y < y.start.y? x.start.y: y.start.y
+                },
+                'end': {
+                    'x': x.end.x > y.end.x? x.end.x: y.end.x,
+                    'y': x.end.y > y.end.y? x.end.y: y.end.y
+                }
             };
-        }, {
-            x1: NaN,
-            y1: NaN,
-            x2: NaN,
-            y2: NaN
+        }, <DrawData> {
+            'start': {
+                'x': NaN,
+                'y': NaN
+            },
+            'end': {
+                'x': NaN,
+                'y': NaN
+            }
         });
 
-        return '<svg viewBox="' + r.x1 + ' ' + r.y1 + ' ' + (r.x2 - r.x1) + ' ' + (r.y2 - r.y1) + '" xmlns="http://www.w3.org/2000/svg">\n<g>\n';
+        return '<svg viewBox="' + r.start.x + ' ' + r.start.y + ' ' + (r.end.x - r.start.x) + ' ' + (r.end.y - r.start.y) + '" xmlns="http://www.w3.org/2000/svg">\n<g>\n';
     }
 
     private getBody() {
-        return this.appModel.data.map((o, index) => {
+        return this.appModel.data.map(o => {
             switch (o.type) {
                 case Constants.ID_LINE:
-                    return '<line id="svg_' + index + '" x1="' + o.x1 + '" y1="' + o.y1 + '" x2="' + o.x2 + '" y2="' + o.y2 + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    return '<line x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_RECTANGLE:
                     const no = this.normalize(o);
-                    return '<rect id="svg_' + index + '" x="' + no.x1 + '" y="' + no.y1 + '" width="' + (no.x2 - no.x1) + '" height="' + (no.y2 - no.y1) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    return '<rect x="' + no.start.x + '" y="' + no.start.y + '" width="' + (no.end.x - no.start.x) + '" height="' + (no.end.y - no.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+
+                case Constants.ID_PEN:
+                    return '<polyline points="' + o.start.x + ',' + o.start.y + ' '
+                        + o.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
+                        + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 default:
                     return '';

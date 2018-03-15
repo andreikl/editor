@@ -34,10 +34,10 @@ export class ControlsGridComponent implements OnInit {
 
         switch (item.id) {
             case Constants.ID_PLUS:
-                return this.appModel.zoom = this.appModel.zoom + Constants.ZOOM_DELATA;
+                return this.appModel.zoom = this.appModel.zoom + Constants.DEFAULT_ZOOM_DELATA;
 
             case Constants.ID_MINUS:
-                return this.appModel.zoom = this.appModel.zoom - Constants.ZOOM_DELATA;
+                return this.appModel.zoom = this.appModel.zoom - Constants.DEFAULT_ZOOM_DELATA;
             
             case Constants.ID_SAVE:
                 return this.svgService.save();

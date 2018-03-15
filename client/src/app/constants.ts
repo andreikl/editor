@@ -13,7 +13,10 @@ export class Constants {
     static ID_MOVE = 'move';
     static ID_SAVE = 'save';
 
-    static ZOOM_DELATA = 0.1;
+    static DEFAULT_ZOOM_DELATA = 0.1;
+    static DEFAULT_GRID = 5.0;
+    static DEFAULT_ZOOM = 10.0;
+    static SELECTION_CIRCLE = 4;
 
     static SVG_FILENAME = 'svgfile.svg';
 
