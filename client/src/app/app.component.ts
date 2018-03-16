@@ -1,10 +1,12 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+//import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material';
+import {LayoutModule} from '@angular/cdk/layout';
 
-import { MessageService } from './services/message.service';
 import { ControlItem } from './models/control-item.model';
 import { Constants } from './constants';
+import { AppModel } from './models/app.model';
 
 @Component({
     selector: 'app-root',
@@ -16,9 +18,22 @@ export class AppComponent implements OnInit {
     toolItems = Constants.TOOL_ITEMS;
     canvasItems = Constants.CANVAS_ITEMS;
 
+    // layoutDefinition
+    layout = [
+        {
+            'name': 'canvas',
+            'columns':12,
+            'rows': 11
+        }, {
+            'name': 'panel',
+            'columns': 12,
+            'rows': 1
+        }
+    ]
+
     constructor (iconRegistry: MatIconRegistry,
         sanitizer: DomSanitizer,
-        private messageService: MessageService) {
+        private appModel: AppModel) {
 
         iconRegistry.addSvgIcon(Constants.ID_LINE, sanitizer.bypassSecurityTrustResourceUrl('/assets/line.svg'));
         iconRegistry.addSvgIcon(Constants.ID_RECTANGLE, sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
@@ -33,14 +48,11 @@ export class AppComponent implements OnInit {
     ngOnInit() {
     }
 
-    @HostListener('window:resize', ['$event'])
+    /*@HostListener('window:resize', ['$event'])
     OnResize(event) {
-        this.messageService.send({
-            name: "size",
-            data: {
-                width: event.target.innerWidth,
-                height: event.target.innerHeight,
-            }
-        });
-    }
+        this.appModel.size = {
+            'x': event.target.innerWidth,
+            'y': event.target.innerWidth
+        }
+    }*/
 }

@@ -33,7 +33,7 @@ interface DraggablePoint {
 };
 
 @Component({
-    selector: 'app-canvas',
+    selector: 'div[app-canvas]',
     templateUrl: './canvas.component.html',
     styleUrls: ['./canvas.component.scss']
 })
@@ -49,20 +49,16 @@ export class CanvasComponent implements OnInit {
 
     ngOnInit() {
         const canvas = this.canvas.nativeElement;
-        this.configureCanvas(canvas);
 
         let draggablePoint;
 
-        this.messageService.subscribe("size", (message) => {
-            this.configureCanvas(this.canvas.nativeElement);
-        });
         this.messageService.subscribe("control-item", (message) => {
             this.item = message.data;
         });
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
             switch (message.data.name) {
                 case Constants.EVENT_ZOOM:
-                    this.drawScene(null);
+                    return this.drawScene(null);
             }
         });
 
@@ -249,13 +245,17 @@ export class CanvasComponent implements OnInit {
                 },
                 e => console.log("wheelEvent error", e)
             );
-    }
 
-    configureCanvas(canvas) {
-        const styles = getComputedStyle(this.canvas.nativeElement);
-        canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
-        canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
-        this.drawScene(null);
+        Observable.fromEvent(canvas, 'resize').subscribe(
+            (event: Event) => {
+                const styles = getComputedStyle(this.canvas.nativeElement);
+                console.log(styles.width, styles.height);
+                canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
+                canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
+                this.drawScene(null);
+            },
+            e => console.log("resizeEvent error", e)
+        );
     }
 
     selectPrimitive(data: DrawData) {

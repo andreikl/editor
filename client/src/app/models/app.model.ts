@@ -15,6 +15,10 @@ export class AppModel extends BaseModel {
         x: 0,
         y: 0
     };
+    public size: Point = {
+        x: -1,
+        y: -1
+    };
     public data: Array<DrawData> = [];
 
     constructor(protected messageService: MessageService) {

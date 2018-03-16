@@ -1,10 +1,11 @@
-<div class="title">
-  <h1>
-    Welcome to {{title}}!
-  </h1>
-</div>
-<app-controls-grid [items]=toolItems></app-controls-grid>
-<app-controls-grid [items]=canvasItems></app-controls-grid>
-<app-controls-grid></app-controls-grid>
-<app-canvas>
-</app-canvas>
+<mat-grid-list rows="12" cols="12">
+    <mat-grid-tile [colspan]="layout[0].rows" [rowspan]="layout[0].columns">
+        <div  class="container" app-canvas></div>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="layout[1].rows" [rowspan]="layout[1].rows">
+        <div app-panel>
+            <app-controls-grid [items]=toolItems></app-controls-grid>
+            <app-controls-grid [items]=canvasItems></app-controls-grid>
+        </div>
+    </mat-grid-tile>
+</mat-grid-list>

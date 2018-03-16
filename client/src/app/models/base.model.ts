@@ -5,7 +5,7 @@ export abstract class BaseModel {
     protected abstract messageService: MessageService;
 
     init() {
-        const PROP_TYPES = ['number'];
+        const PROP_TYPES = ['number', 'object'];
         const PROP_PREFIX = '_';
         let that = this;
 
