@@ -78,7 +78,7 @@ export class CanvasComponent implements OnInit {
 
         const pointInitiator = (start: Point, rect): DrawData => {
             if (this.draggablePoint) {
-                draggablePoint = this.draggablePoint || draggablePoint;
+                draggablePoint = this.draggablePoint;
                 return draggablePoint;
             } else if ((this.item.id == Constants.ID_MOVE)) {
                 const x = start.x - rect.left;
@@ -259,51 +259,105 @@ export class CanvasComponent implements OnInit {
     }
 
     selectPrimitive(data: DrawData) {
-        const area = (x1, y1, x2, y2, x3, y3) => {
-            return Math.abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
-        }
 
-        const testLine = (points, point) => {
-            /* Calculate area of rectangle ABCD */
-            const a = area(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y)
-                + area(points[0].x, points[0].y, points[3].x, points[3].y, points[2].x, points[2].y);
+        const dot = (x, y) => x.x * y.x + x.y * y.y;
 
-            /* Calculate area of triangle PAB */
-            const a1 = area(point.x, point.y, points[0].x, points[0].y, points[1].x, points[1].y);
-            /* Calculate area of triangle PBC */
-            const a2 = area(point.x, point.y, points[1].x, points[1].y, points[2].x, points[2].y);
-            /* Calculate area of triangle PCD */
-            const a3 = area(point.x, point.y, points[2].x, points[2].y, points[3].x, points[3].y);
-            /* Calculate area of triangle PAD */
-            const a4 = area(point.x, point.y, points[0].x, points[0].y, points[3].x, points[3].y);
+        const testLine = (a: Point, b: Point, point: Point) => {
+            const ab = {
+                'x': b.x - a.x,
+                'y': b.y - a.y,
+            }
 
-            return (Math.round(a) == Math.round(a1 + a2 + a3 + a4));
+            const ac = {
+                'x': point.x - a.x,
+                'y': point.y - a.y,
+            }
+
+            const bc = {
+                'x': point.x - b.x,
+                'y': point.y - b.y,
+            }
+            const e = dot(ac, ab);
+
+            let dist = NaN;
+            if (e <= 0.0) {
+                dist = dot(ac, ac);
+            } else {
+                const f = dot(ab, ab);
+                if (e >= f) {
+                    dist = dot(bc, bc);
+                } else {
+                    dist = dot(ac, ac) - e * e / f;
+                }
+            }
+
+            // closest point implementation
+            // project point into ab, computing parametrized position d(t) = a + t * (b - a)
+            let t = dot(ac, ab) / dot(ab, ab);
+
+            // if point outside ab, attach t to the closest endpoint
+            if (t < 0.0) t = 0.0;
+            if (t > 1.0) t = 1.0;
+
+            // compute the closest point on ab
+            const d = {
+                'x': ab.x * t + a.x,
+                'y': ab.y * t + a.y
+            }
+
+            //draw projection to line
+            /*const canvas = this.canvas.nativeElement;
+            const context = canvas.getContext("2d");
+            context.beginPath();
+            context.moveTo(point.x, point.y);
+            context.lineTo(d.x, d.y);
+            context.stroke();*/
+
+            return (dist < Constants.SELECTION_CIRCLE * Constants.SELECTION_CIRCLE)? true: false;
         }
 
         this.selectedPrimitive = this.appModel.data.find(o => {
             switch(o.type) {
                 case Constants.ID_LINE:
-                    return testLine([
-                        {
-                            'x': o.start.x - Constants.SELECTION_CIRCLE,
-                            'y': o.start.y - Constants.SELECTION_CIRCLE
-                        }, {
-                            'x': o.start.x - Constants.SELECTION_CIRCLE,
-                            'y': o.start.y + Constants.SELECTION_CIRCLE
-                        }, {
-                            'x': o.end.x - Constants.SELECTION_CIRCLE,
-                            'y': o.end.y + Constants.SELECTION_CIRCLE
-                        }, {
-                            'x': o.end.x - Constants.SELECTION_CIRCLE,
-                            'y': o.end.y - Constants.SELECTION_CIRCLE
-                        }
-                    ], data.start);
-    
+                    return testLine(o.start, o.end, data.start);
+
                 case Constants.ID_RECTANGLE:
-                    return false;
+                    return testLine({
+                       'x': o.start.x,
+                       'y': o.start.y
+                    }, {
+                        'x': o.start.x,
+                        'y': o.end.y
+                    }, data.start) || testLine({
+                        'x': o.start.x,
+                        'y': o.end.y
+                    }, {
+                        'x': o.end.x,
+                        'y': o.end.y
+                    }, data.start) || testLine({
+                        'x': o.end.x,
+                        'y': o.end.y
+                    }, {
+                        'x': o.end.x,
+                        'y': o.start.y
+                    }, data.start) || testLine({
+                        'x': o.end.x,
+                        'y': o.start.y
+                    }, {
+                        'x': o.start.x,
+                        'y': o.start.y
+                    }, data.start);
     
                 case Constants.ID_PEN:
-                    return false;
+                    return o.points.reduce((x, y) => {
+                        return {
+                            'res': x.res || testLine(x.point, y, data.start),
+                            'point': y
+                        }
+                    }, {
+                        'res': false,
+                        'point': o.start
+                    }).res;
 
                 default:
                     return false;
