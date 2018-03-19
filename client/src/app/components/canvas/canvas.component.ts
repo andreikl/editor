@@ -55,10 +55,14 @@ export class CanvasComponent implements OnInit {
         this.messageService.subscribe("control-item", (message) => {
             this.item = message.data;
         });
+
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
             switch (message.data.name) {
                 case Constants.EVENT_ZOOM:
                     return this.drawScene(null);
+                
+                case Constants.EVENT_SIZE:
+                    return this.resizeCanvas();
             }
         });
 
@@ -245,21 +249,22 @@ export class CanvasComponent implements OnInit {
                 },
                 e => console.log("wheelEvent error", e)
             );
+    }
 
-        Observable.fromEvent(canvas, 'resize').subscribe(
-            (event: Event) => {
-                const styles = getComputedStyle(this.canvas.nativeElement);
-                console.log(styles.width, styles.height);
-                canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
-                canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
-                this.drawScene(null);
-            },
-            e => console.log("resizeEvent error", e)
-        );
+    ngAfterViewInit() {
+        this.resizeCanvas();
+    }
+
+    resizeCanvas() {
+        let canvas = this.canvas.nativeElement;
+        const styles = getComputedStyle(canvas);
+        console.log('new canvas size: ' + styles.width + ', ' + styles.height);
+        canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
+        canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
+        this.drawScene(null);
     }
 
     selectPrimitive(data: DrawData) {
-
         const dot = (x, y) => x.x * y.x + x.y * y.y;
 
         const testLine = (a: Point, b: Point, point: Point) => {

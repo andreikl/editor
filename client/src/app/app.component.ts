@@ -1,9 +1,9 @@
-//import { Component, OnInit, HostListener } from '@angular/core';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material';
 import {LayoutModule} from '@angular/cdk/layout';
 
+import { MessageService } from './services/message.service';
 import { ControlItem } from './models/control-item.model';
 import { Constants } from './constants';
 import { AppModel } from './models/app.model';
@@ -18,20 +18,11 @@ export class AppComponent implements OnInit {
     toolItems = Constants.TOOL_ITEMS;
     canvasItems = Constants.CANVAS_ITEMS;
 
-    // layoutDefinition
-    layout = [
-        {
-            'name': 'canvas',
-            'columns':12,
-            'rows': 11
-        }, {
-            'name': 'panel',
-            'columns': 12,
-            'rows': 1
-        }
-    ]
+    // default layout definition
+    layout = 'horizontal';
 
     constructor (iconRegistry: MatIconRegistry,
+        private messageService: MessageService,
         sanitizer: DomSanitizer,
         private appModel: AppModel) {
 
@@ -46,13 +37,24 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
+            if (message.data.name == Constants.EVENT_SIZE) {
+                if (this.appModel.size.x > this.appModel.size.y) {
+                    console.log('horizontal', this.appModel.size);
+                    this.layout = 'horizontal';
+                } else {
+                    console.log('vertical', this.appModel.size);
+                    this.layout = 'vertical';
+                }
+            }
+        });
     }
 
-    /*@HostListener('window:resize', ['$event'])
+    @HostListener('window:resize', ['$event'])
     OnResize(event) {
         this.appModel.size = {
             'x': event.target.innerWidth,
             'y': event.target.innerWidth
         }
-    }*/
+    }
 }

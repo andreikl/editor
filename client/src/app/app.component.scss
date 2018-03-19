@@ -1,5 +1,29 @@
-.container {
-    display: block;
-    width: 100%;
-    height: 100%;
+@import '../styles';
+
+.layout {
+    display: flex;
+    flex-direction: column;
+
+    height: 100vh;
+    overflow: hidden;
+
+    .canvas {
+        flex: 1 1 90%;
+    }
+
+    .panel {
+        flex: 1 1 10%;
+    }
+
+    @include breakpoint(medium) {
+        flex-direction: row;
+
+        .canvas {
+            flex: 1 1 80%;
+        }
+    
+        .panel {
+            flex: 1 1 20%;
+        }
+    }
 }
