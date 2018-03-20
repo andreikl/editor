@@ -4,6 +4,7 @@ export class Constants {
     static EVENT_MODEL_CHANGED = 'model-changed';
     static EVENT_ZOOM = 'zoom';
     static EVENT_SIZE = 'size';
+    static EVENT_SELECTED_PRIMITIVE = 'selectedPrimitive';
 
     static ID_LINE = 'line';
     static ID_RECTANGLE = 'rectangle';

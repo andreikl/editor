@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { MessageService } from './../services/message.service';
 
-import { DrawData } from './draw-data.interface';
+import { Primitive } from './primitive.interface';
 import { Point } from './point.interface';
 import { BaseModel } from './base.model';
 import { Constants } from '../constants';
@@ -15,11 +15,20 @@ export class AppModel extends BaseModel {
         x: 0,
         y: 0
     };
+
     public size: Point = {
         x: -1,
         y: -1
     };
-    public data: Array<DrawData> = [];
+
+    public selectedPrimitive?: Primitive = {
+        'type': '',
+        'start': { 'x': 0, 'y': 0 },
+        'end': { 'x': 0, 'y': 0 },
+        'points': []
+    };
+
+    public data: Array<Primitive> = [];
 
     constructor(protected messageService: MessageService) {
         super();

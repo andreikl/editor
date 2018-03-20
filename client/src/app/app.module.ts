@@ -18,6 +18,7 @@ import { SvgService } from './services/svg.service';
 import { AppModel } from './models/app.model';
 import { PropertiesPanelComponent } from './components/properties-panel/properties-panel.component';
 import { PropertiesRectangleComponent } from './components/properties-rectangle/properties-rectangle.component';
+import { PropertiesIdleComponent } from './components/properties-idle/properties-idle.component';
 
 @NgModule({
     declarations: [
@@ -26,7 +27,8 @@ import { PropertiesRectangleComponent } from './components/properties-rectangle/
         CanvasComponent,
         PanelComponent,
         PropertiesPanelComponent,
-        PropertiesRectangleComponent
+        PropertiesRectangleComponent,
+        PropertiesIdleComponent
     ],
     imports: [
         BrowserModule,
@@ -46,7 +48,8 @@ import { PropertiesRectangleComponent } from './components/properties-rectangle/
         AppModel
     ],
     entryComponents: [
-        PropertiesRectangleComponent
+        PropertiesRectangleComponent,
+        PropertiesIdleComponent
     ],
     bootstrap: [AppComponent]
 })

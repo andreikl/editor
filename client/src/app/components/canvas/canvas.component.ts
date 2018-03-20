@@ -16,7 +16,7 @@ import { ControlItem } from './../../models/control-item.model';
 import { Message } from './../../models/message.model';
 import { Constants } from './../../constants';
 
-import { DrawData } from '../../models/draw-data.interface';
+import { Primitive } from '../../models/primitive.interface';
 import { Point } from '../../models/point.interface';
 import { AppModel } from './../../models/app.model';
 
@@ -29,7 +29,7 @@ enum PointType {
 interface DraggablePoint {
     direction: PointType;
     point: Point;
-    primitive: DrawData;
+    primitive: Primitive;
 };
 
 @Component({
@@ -42,7 +42,6 @@ export class CanvasComponent implements OnInit {
     canvas: ElementRef;
 
     item: ControlItem = <ControlItem>{ id: "rectangle", name: "Rectangle", isActive: false };
-    selectedPrimitive?: DrawData;
     draggablePoint?: DraggablePoint;
 
     constructor(private messageService: MessageService, private appModel: AppModel) { }
@@ -76,7 +75,7 @@ export class CanvasComponent implements OnInit {
             return (value + offset) * this.appModel.zoom;
         }
 
-        const pointInitiator = (start: Point, rect): DrawData => {
+        const pointInitiator = (start: Point, rect): Primitive => {
             if (this.draggablePoint) {
                 draggablePoint = this.draggablePoint;
                 return draggablePoint;
@@ -92,17 +91,17 @@ export class CanvasComponent implements OnInit {
             } else {
                 const x = toNormal(start.x - rect.left, this.appModel.offset.x, false);
                 const y = toNormal(start.y - rect.top, this.appModel.offset.y, false);
-                this.selectedPrimitive = {
+                this.appModel.selectedPrimitive = {
                     'type': this.item.id,
                     'start': { 'x': x, 'y': y },
                     'end': { 'x': x, 'y': y },
                     'points': []
                 }
-                return this.selectedPrimitive;
+                return this.appModel.selectedPrimitive;
             }
         }
 
-        const pointAccumulator = (x: DrawData, y: Point): DrawData => {
+        const pointAccumulator = (x: Primitive, y: Point): Primitive => {
             if (draggablePoint) {
                 draggablePoint.point.x = toNormal(y.x, this.appModel.offset.x, false);
                 draggablePoint.point.y = toNormal(y.y, this.appModel.offset.y, false);
@@ -131,7 +130,7 @@ export class CanvasComponent implements OnInit {
             return x;
         }
 
-        const addPrimitive = (data: DrawData) => {
+        const addPrimitive = (data: Primitive) => {
             if (draggablePoint) {
                 draggablePoint = undefined;
             } else {
@@ -201,37 +200,37 @@ export class CanvasComponent implements OnInit {
 
         Observable.fromEvent(canvas, 'mousemove')
             .map((event: MouseEvent) => {
-                if (this.selectedPrimitive) {
+                if (this.appModel.selectedPrimitive) {
                     const rect = canvas.getBoundingClientRect();
                     const sc = Constants.SELECTION_CIRCLE;
                     const x = event.pageX - rect.left;
                     const y = event.pageY - rect.top;
 
-                    const x1 = fromNormal(this.selectedPrimitive.start.x, this.appModel.offset.x);
-                    const y1 = fromNormal(this.selectedPrimitive.start.y, this.appModel.offset.y);
-                    const x2 = fromNormal(this.selectedPrimitive.end.x, this.appModel.offset.x);
-                    const y2 = fromNormal(this.selectedPrimitive.end.y, this.appModel.offset.y);
+                    const x1 = fromNormal(this.appModel.selectedPrimitive.start.x, this.appModel.offset.x);
+                    const y1 = fromNormal(this.appModel.selectedPrimitive.start.y, this.appModel.offset.y);
+                    const x2 = fromNormal(this.appModel.selectedPrimitive.end.x, this.appModel.offset.x);
+                    const y2 = fromNormal(this.appModel.selectedPrimitive.end.y, this.appModel.offset.y);
                     if (x >= x1 - sc && x <= x1 + sc && y >= y1 - sc && y <= y1 + sc) {
                         return <DraggablePoint> {
-                            'point': this.selectedPrimitive.start,
+                            'point': this.appModel.selectedPrimitive.start,
                             'direction': PointType.StartPoint,
-                            'primitive': this.selectedPrimitive
+                            'primitive': this.appModel.selectedPrimitive
                         };
                     } else if (x >= x2 - sc && x <= x2 + sc && y >= y2 - sc && y <= y2 + sc) {
                         return <DraggablePoint> {
-                            'point': this.selectedPrimitive.end,
+                            'point': this.appModel.selectedPrimitive.end,
                             'direction': PointType.EndPoint,
-                            'primitive': this.selectedPrimitive
+                            'primitive': this.appModel.selectedPrimitive
                         };
                     } else {
-                        return this.selectedPrimitive.points.filter(point => {
+                        return this.appModel.selectedPrimitive.points.filter(point => {
                             const px = fromNormal(point.x, this.appModel.offset.x);
                             const py = fromNormal(point.y, this.appModel.offset.y);
                             return x >= px - sc && x <= px + sc && y >= py - sc && y <= py + sc;
                         }).map(point => <DraggablePoint> {
                             'point': point,
                             'direction': PointType.MiddlePoint,
-                            'primitive': this.selectedPrimitive
+                            'primitive': this.appModel.selectedPrimitive
                         }).find(point => true);
                     }
                 }
@@ -264,7 +263,7 @@ export class CanvasComponent implements OnInit {
         this.drawScene(null);
     }
 
-    selectPrimitive(data: DrawData) {
+    selectPrimitive(data: Primitive) {
         const dot = (x, y) => x.x * y.x + x.y * y.y;
 
         const testLine = (a: Point, b: Point, point: Point) => {
@@ -321,7 +320,7 @@ export class CanvasComponent implements OnInit {
             return (dist < Constants.SELECTION_CIRCLE * Constants.SELECTION_CIRCLE)? true: false;
         }
 
-        this.selectedPrimitive = this.appModel.data.find(o => {
+        this.appModel.selectedPrimitive = this.appModel.data.find(o => {
             switch(o.type) {
                 case Constants.ID_LINE:
                     return testLine(o.start, o.end, data.start);
@@ -371,7 +370,7 @@ export class CanvasComponent implements OnInit {
         this.drawScene(null);
     }
 
-    drawScene(data: DrawData | null) {
+    drawScene(data: Primitive | null) {
         const canvas = this.canvas.nativeElement;
         const context = canvas.getContext("2d");
 
@@ -430,11 +429,11 @@ export class CanvasComponent implements OnInit {
     }
 
     drawSelection(context) {
-        if (this.selectedPrimitive) {
-            const x1 = this.appModel.zoom * (this.appModel.offset.x + this.selectedPrimitive.start.x);
-            const y1 = this.appModel.zoom * (this.appModel.offset.y + this.selectedPrimitive.start.y);
-            const x2 = this.appModel.zoom * (this.appModel.offset.x + this.selectedPrimitive.end.x);
-            const y2 = this.appModel.zoom * (this.appModel.offset.y + this.selectedPrimitive.end.y);
+        if (this.appModel.selectedPrimitive) {
+            const x1 = this.appModel.zoom * (this.appModel.offset.x + this.appModel.selectedPrimitive.start.x);
+            const y1 = this.appModel.zoom * (this.appModel.offset.y + this.appModel.selectedPrimitive.start.y);
+            const x2 = this.appModel.zoom * (this.appModel.offset.x + this.appModel.selectedPrimitive.end.x);
+            const y2 = this.appModel.zoom * (this.appModel.offset.y + this.appModel.selectedPrimitive.end.y);
 
             context.beginPath();
             context.arc(x1, y1, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
@@ -443,7 +442,7 @@ export class CanvasComponent implements OnInit {
             context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
             context.stroke();
 
-            this.selectedPrimitive.points.forEach((o, index) => {
+            this.appModel.selectedPrimitive.points.forEach((o, index) => {
                 const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
                 const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
                 context.beginPath();
@@ -453,7 +452,7 @@ export class CanvasComponent implements OnInit {
         }
     }
 
-    drawPrimitive(data: DrawData, context) {
+    drawPrimitive(data: Primitive, context) {
         const x1 = this.appModel.zoom * (this.appModel.offset.x + data.start.x);
         const y1 = this.appModel.zoom * (this.appModel.offset.y + data.start.y);
         const x2 = this.appModel.zoom * (this.appModel.offset.x + data.end.x);

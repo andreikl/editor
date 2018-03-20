@@ -1,6 +1,6 @@
 import { Point } from './../models/point.interface';
 
-export interface DrawData {
+export interface Primitive {
     'type': string;
     'start': Point;
     'end': Point;

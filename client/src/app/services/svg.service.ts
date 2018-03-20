@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { DrawData } from '../models/draw-data.interface';
+import { Primitive } from '../models/primitive.interface';
 import { AppModel } from './../models/app.model';
 import { Constants } from '../constants';
 
@@ -9,7 +9,7 @@ export class SvgService {
     constructor(private appModel: AppModel) { }
 
     private normalize(data) {
-        return <DrawData> {
+        return <Primitive> {
             'start': {
                 'x': data.start.x < data.end.x? data.start.x: data.end.x,
                 'y': data.start.y < data.end.y? data.start.y: data.end.y
@@ -25,7 +25,7 @@ export class SvgService {
         const r = this.appModel.data.reduce((x, y) => {
             x = this.normalize(x);
             y = this.normalize(y);
-            return <DrawData> {
+            return <Primitive> {
                 'start': {
                     'x': x.start.x < y.start.x? x.start.x: y.start.x,
                     'y': x.start.y < y.start.y? x.start.y: y.start.y
@@ -35,7 +35,7 @@ export class SvgService {
                     'y': x.end.y > y.end.y? x.end.y: y.end.y
                 }
             };
-        }, <DrawData> {
+        }, <Primitive> {
             'start': {
                 'x': NaN,
                 'y': NaN
