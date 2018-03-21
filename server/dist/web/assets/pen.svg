@@ -1,0 +1,12 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+ <g>
+  <title>background</title>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_29" y2="52" x2="12" y1="32" x1="12" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_30" y2="52" x2="12" y1="52" x1="32" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_31" y2="12" x2="32" y1="32" x1="12" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_33" y2="32" x2="52" y1="52" x1="32" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_34" y2="32" x2="52" y1="12" x1="32" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_35" y2="32" x2="12" y1="52" x1="32" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+  <line stroke-width="4" stroke-linecap="null" stroke-linejoin="null" id="svg_36" y2="42" x2="22" y1="22" x1="42" fill-opacity="null" stroke-opacity="null" stroke="#000000" fill="none"/>
+ </g>
+</svg>

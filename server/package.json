@@ -1,23 +1,25 @@
 {
   "name": "editor",
-  "engines": {
-    "node": "6.x",
-    "npm": "4.x"
-  },
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Vector editor",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "start": "node start.js"
+    "build": "gulp scripts",
+    "start": "node dist/server.js",
+    "local": "set NODE_ENV=localhost&& gulp scripts && npm start"
   },
   "author": "Andrei Klimchuk <andrew.klimchuk@gmail.com>",
   "license": "MIT",
-  "dependencies": {
-    "hapi": "^13.2.1",
-    "inert": "^3.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "mocha": "^3.2.0"
+    "@types/node": "^9.4.7",
+    "config": "^1.30.0",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^4.0.1",
+    "hapi": "^17.2.3",
+    "inert": "^5.1.0",
+    "mocha": "^3.2.0",
+    "typescript": "^2.7.2"
   }
 }
