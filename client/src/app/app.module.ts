@@ -19,6 +19,7 @@ import { AppModel } from './models/app.model';
 import { PropertiesPanelComponent } from './components/properties-panel/properties-panel.component';
 import { PropertiesRectangleComponent } from './components/properties-rectangle/properties-rectangle.component';
 import { PropertiesIdleComponent } from './components/properties-idle/properties-idle.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
     declarations: [
@@ -31,8 +32,9 @@ import { PropertiesIdleComponent } from './components/properties-idle/properties
         PropertiesIdleComponent
     ],
     imports: [
-        BrowserModule,
         HttpClientModule,
+        BrowserModule,
+        FormsModule,
 
         // -- Material Design
         MatExpansionModule,

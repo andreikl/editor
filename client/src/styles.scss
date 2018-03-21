@@ -100,6 +100,16 @@ $app-theme: mat-light-theme($app-primary, $app-accent);
 @include angular-material-theme($app-theme);
 
 // ------------------------------
+// Meterial design fixes
+// ------------------------------
+.panel {
+    //override input width
+    .mat-form-field-infix {
+      width: 100%;
+    }
+}
+
+// ------------------------------
 // Breakpoint Definitions
 // Usage: @include breakpoint(xlarge) {}
 // ------------------------------
@@ -151,40 +161,40 @@ $padding-xl: 40px;
 // ------------------------------
 
 html {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 *, *:before, *:after {
-  box-sizing: inherit;
+    box-sizing: inherit;
 }
 
 body {
-  margin: 0;
-  font-size: 14px;
-  font-family: $stack-arial;
-  font-weight: $weight-regular;
-  color: $color-gray-medium;
+    margin: 0;
+    font-size: 14px;
+    font-family: $stack-arial;
+    font-weight: $weight-regular;
+    color: $color-gray-medium;
 
-  position: relative;
+    position: relative;
 }
 
 ul {
-  list-style: none;
-  padding-left: 0px;
+    list-style: none;
+    padding-left: 0px;
 }
 
 a {
-  text-decoration: none;
-  color: $color-cyan-dark;
+    text-decoration: none;
+    color: $color-cyan-dark;
 
-  &:hover,
-  &:active,
-  &:focus {
-    color: $color-cyan-light;
-  }
+    &:hover,
+    &:active,
+    &:focus {
+        color: $color-cyan-light;
+    }
 }
 
 h1 {
-  padding: 0px;
-  margin: 0px;
+    padding: 0px;
+    margin: 0px;
 }

@@ -16,7 +16,6 @@ import { AppModel } from './models/app.model';
 export class AppComponent implements OnInit {
     title = Constants.APP_TITLE;
     toolItems = Constants.TOOL_ITEMS;
-    canvasItems = Constants.CANVAS_ITEMS;
 
     // default layout definition
     layout = 'horizontal';
@@ -32,8 +31,8 @@ export class AppComponent implements OnInit {
         iconRegistry.addSvgIcon(Constants.ID_GRID, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
         iconRegistry.addSvgIcon(Constants.ID_PLUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
         iconRegistry.addSvgIcon(Constants.ID_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/save.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
     }
 
     ngOnInit() {

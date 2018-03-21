@@ -1,18 +1,18 @@
 <div class="panel">
   <div class="column">
     <mat-form-field>
-      <input matInput placeholder="X1">
+        <input type="number" matInput placeholder="X1" [(ngModel)]="primitive.start.x" (blur)="update()">
     </mat-form-field>
     <mat-form-field>
-      <input matInput placeholder="Y1">
+        <input type="number" matInput placeholder="X2" [(ngModel)]="primitive.end.x" (blur)="update()">
     </mat-form-field>
   </div>
   <div class="column">
     <mat-form-field>
-      <input matInput placeholder="X2">
+        <input type="number" matInput placeholder="Y1" [(ngModel)]="primitive.start.y" (blur)="update()">
     </mat-form-field>
     <mat-form-field>
-      <input matInput placeholder="Y2">
+        <input type="number" matInput placeholder="Y2" [(ngModel)]="primitive.end.y" (blur)="update()">
     </mat-form-field>
   </div>
 </div>

@@ -59,27 +59,24 @@ export class CanvasComponent implements OnInit {
             switch (message.data.name) {
                 case Constants.EVENT_ZOOM:
                     return this.drawScene(null);
-                
+
+                case Constants.EVENT_GRID:
+                    console.log('grid:' + this.appModel.grid);
+                    return this.drawScene(null);
+
+                case Constants.EVENT_SELECTED_PRIMITIVE:
+                    return this.drawScene(null);
+
                 case Constants.EVENT_SIZE:
                     return this.resizeCanvas();
             }
         });
 
-        // convert point to normalised coordinate space
-        const toNormal = (value: number, offset: number, isGrid?: Boolean): number => {
-            const nv = (value - offset) / this.appModel.zoom;
-            return isGrid? this.appModel.grid * Math.round(nv / this.appModel.grid): nv;
-        }
-
-        const fromNormal = (value: number, offset: number): number => {
-            return (value + offset) * this.appModel.zoom;
-        }
-
         const pointInitiator = (start: Point, rect): Primitive => {
-            if (this.draggablePoint) {
+            if (this.draggablePoint) { // editing primitive state
                 draggablePoint = this.draggablePoint;
                 return draggablePoint;
-            } else if ((this.item.id == Constants.ID_MOVE)) {
+            } else if ((this.item.id == Constants.ID_MOVE)) { // moving page state
                 const x = start.x - rect.left;
                 const y = start.y - rect.top;
                 return {
@@ -88,9 +85,9 @@ export class CanvasComponent implements OnInit {
                     'end': { 'x': x, 'y': y },
                     'points': []
                 }
-            } else {
-                const x = toNormal(start.x - rect.left, this.appModel.offset.x, false);
-                const y = toNormal(start.y - rect.top, this.appModel.offset.y, false);
+            } else { // creating primitive state
+                const x = this.toNormal(start.x - rect.left, this.appModel.offset.x, !isNaN(this.appModel.grid));
+                const y = this.toNormal(start.y - rect.top, this.appModel.offset.y, !isNaN(this.appModel.grid));
                 this.appModel.selectedPrimitive = {
                     'type': this.item.id,
                     'start': { 'x': x, 'y': y },
@@ -102,11 +99,11 @@ export class CanvasComponent implements OnInit {
         }
 
         const pointAccumulator = (x: Primitive, y: Point): Primitive => {
-            if (draggablePoint) {
-                draggablePoint.point.x = toNormal(y.x, this.appModel.offset.x, false);
-                draggablePoint.point.y = toNormal(y.y, this.appModel.offset.y, false);
+            if (draggablePoint) { // editing primitive state
+                draggablePoint.point.x = this.toNormal(y.x, this.appModel.offset.x, !isNaN(this.appModel.grid));
+                draggablePoint.point.y = this.toNormal(y.y, this.appModel.offset.y, !isNaN(this.appModel.grid));
                 this.drawScene(null);
-            } else if ((this.item.id == Constants.ID_MOVE)) {
+            } else if ((this.item.id == Constants.ID_MOVE)) { // moving page state
                 this.appModel.offset = {
                     x: this.appModel.offset.x + (y.x - x.end.x) / this.appModel.zoom,
                     y: this.appModel.offset.y + (y.y - x.end.y) / this.appModel.zoom
@@ -114,9 +111,9 @@ export class CanvasComponent implements OnInit {
                 x.end.x = y.x;
                 x.end.y = y.y;
                 this.drawScene(null);
-            } else {
-                x.end.x = y.x = toNormal(y.x, this.appModel.offset.x, false);
-                x.end.y = y.y = toNormal(y.y, this.appModel.offset.y, false);
+            } else { // creating primitive state
+                x.end.x = y.x = this.toNormal(y.x, this.appModel.offset.x, !isNaN(this.appModel.grid));
+                x.end.y = y.y = this.toNormal(y.y, this.appModel.offset.y, !isNaN(this.appModel.grid));
                 if (this.item.id == Constants.ID_PEN) {
                     const lastIndex = x.points.length - 1;
                     if (lastIndex >= 0 && (x.points[lastIndex].x != y.x || x.points[lastIndex].y != y.y)) {
@@ -206,10 +203,11 @@ export class CanvasComponent implements OnInit {
                     const x = event.pageX - rect.left;
                     const y = event.pageY - rect.top;
 
-                    const x1 = fromNormal(this.appModel.selectedPrimitive.start.x, this.appModel.offset.x);
-                    const y1 = fromNormal(this.appModel.selectedPrimitive.start.y, this.appModel.offset.y);
-                    const x2 = fromNormal(this.appModel.selectedPrimitive.end.x, this.appModel.offset.x);
-                    const y2 = fromNormal(this.appModel.selectedPrimitive.end.y, this.appModel.offset.y);
+                    const x1 = this.fromNormal(this.appModel.selectedPrimitive.start.x, this.appModel.offset.x);
+                    const y1 = this.fromNormal(this.appModel.selectedPrimitive.start.y, this.appModel.offset.y);
+                    const x2 = this.fromNormal(this.appModel.selectedPrimitive.end.x, this.appModel.offset.x);
+                    const y2 = this.fromNormal(this.appModel.selectedPrimitive.end.y, this.appModel.offset.y);
+                    console.log(x2, y2);
                     if (x >= x1 - sc && x <= x1 + sc && y >= y1 - sc && y <= y1 + sc) {
                         return <DraggablePoint> {
                             'point': this.appModel.selectedPrimitive.start,
@@ -224,8 +222,8 @@ export class CanvasComponent implements OnInit {
                         };
                     } else {
                         return this.appModel.selectedPrimitive.points.filter(point => {
-                            const px = fromNormal(point.x, this.appModel.offset.x);
-                            const py = fromNormal(point.y, this.appModel.offset.y);
+                            const px = this.fromNormal(point.x, this.appModel.offset.x);
+                            const py = this.fromNormal(point.y, this.appModel.offset.y);
                             return x >= px - sc && x <= px + sc && y >= py - sc && y <= py + sc;
                         }).map(point => <DraggablePoint> {
                             'point': point,
@@ -254,10 +252,19 @@ export class CanvasComponent implements OnInit {
         this.resizeCanvas();
     }
 
+    // convert point to normalised coordinate space
+    toNormal(value: number, offset: number, isGrid?: Boolean) {
+        const nv = (value - offset) / this.appModel.zoom;
+        return isGrid? this.appModel.grid * Math.round(nv / this.appModel.grid): nv;
+    }
+
+    fromNormal(value: number, offset: number) {
+        return (value + offset) * this.appModel.zoom;
+    }
+
     resizeCanvas() {
         let canvas = this.canvas.nativeElement;
         const styles = getComputedStyle(canvas);
-        console.log('new canvas size: ' + styles.width + ', ' + styles.height);
         canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
         canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
         this.drawScene(null);
@@ -376,7 +383,9 @@ export class CanvasComponent implements OnInit {
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
+        this.drawZero(canvas, context);
         this.drawGrid(canvas, context);
+        this.drawNet(canvas, context);
         this.appModel.data.forEach(o => {
             this.drawPrimitive(o, context);
         });
@@ -388,19 +397,76 @@ export class CanvasComponent implements OnInit {
         this.drawSelection(context);
     }
 
-    drawGrid(canvas, context) {
-        const constOffsetDelta = {
-            x: this.appModel.offset.x % this.appModel.grid * this.appModel.zoom,
-            y: this.appModel.offset.y % this.appModel.grid * this.appModel.zoom,
-        };
-        context.beginPath();
-        for (let y = constOffsetDelta.y; y < canvas.height; y += this.appModel.grid * this.appModel.zoom) {
-            context.setLineDash([1, this.appModel.grid * this.appModel.zoom - 1]);
-            context.moveTo(constOffsetDelta.x, y);
-            context.lineTo(canvas.width, y);
+    drawZero(canvas, context) {
+        const zeroPoint = {
+            x: this.fromNormal(0, this.appModel.offset.x),
+            y: this.fromNormal(0, this.appModel.offset.y)
         }
-        context.stroke();
-        context.setLineDash([]);
+        if (zeroPoint.x >= 0 && zeroPoint.x <= canvas.width && zeroPoint.y >= 0 && zeroPoint.y <= canvas.height) {
+            context.beginPath();
+            context.arc(zeroPoint.x, zeroPoint.y, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
+            context.fill();
+        }
+    }
+
+    drawGrid(canvas, context) {
+        if (!isNaN(this.appModel.grid)) {
+            const constOffsetDelta = {
+                x: this.appModel.offset.x % this.appModel.grid * this.appModel.zoom,
+                y: this.appModel.offset.y % this.appModel.grid * this.appModel.zoom,
+            };
+            context.beginPath();
+            for (let y = constOffsetDelta.y; y < canvas.height; y += this.appModel.grid * this.appModel.zoom) {
+                context.setLineDash([1, this.appModel.grid * this.appModel.zoom - 1]);
+                context.moveTo(constOffsetDelta.x, y);
+                context.lineTo(canvas.width, y);
+            }
+            context.stroke();
+            context.setLineDash([]);
+        }
+    }
+
+    drawNet(canvas, context) {
+        if (!isNaN(this.appModel.net)) {
+            const constOffsetDelta = {
+                x: this.appModel.offset.x % this.appModel.net * this.appModel.zoom,
+                y: this.appModel.offset.y % this.appModel.net * this.appModel.zoom,
+            };
+            context.beginPath();
+            let index = 0;
+            for (let x = constOffsetDelta.x; x < canvas.width; x += this.appModel.net * this.appModel.zoom, index++) {
+                if (index % this.appModel.net2 == 0) {
+                    context.stroke();
+                    context.beginPath();
+                    context.moveTo(x, 0);
+                    context.lineTo(x, canvas.height);
+                    context.lineWidth=2;
+                    context.stroke();
+                    context.beginPath();
+                    context.lineWidth=1;
+                } else {
+                    context.moveTo(x, 0);
+                    context.lineTo(x, canvas.height);
+                }
+            }
+            index = 0;
+            for (let y = constOffsetDelta.y; y < canvas.height; y += this.appModel.net * this.appModel.zoom, index++) {
+                if (index % this.appModel.net2 == 0) {
+                    context.stroke();
+                    context.beginPath();
+                    context.moveTo(0, y);
+                    context.lineTo(canvas.width, y);
+                    context.lineWidth=2;
+                    context.stroke();
+                    context.beginPath();
+                    context.lineWidth=1;
+                } else {
+                    context.moveTo(0, y);
+                    context.lineTo(canvas.width, y);
+                }
+            }
+            context.stroke();
+        }
     }
 
     drawLine(x1, y1, x2, y2, data, context) {

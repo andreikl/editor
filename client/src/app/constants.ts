@@ -4,6 +4,7 @@ export class Constants {
     static EVENT_MODEL_CHANGED = 'model-changed';
     static EVENT_ZOOM = 'zoom';
     static EVENT_SIZE = 'size';
+    static EVENT_GRID = 'grid';
     static EVENT_SELECTED_PRIMITIVE = 'selectedPrimitive';
 
     static ID_LINE = 'line';
@@ -16,8 +17,10 @@ export class Constants {
     static ID_SAVE = 'save';
 
     static DEFAULT_ZOOM_DELATA = 0.1;
-    static DEFAULT_GRID = 5.0;
-    static DEFAULT_ZOOM = 1.0;
+    static DEFAULT_GRID = 4.0;
+    static DEFAULT_NET = 20.0;
+    static DEFAULT_NET2 = 5;
+    static DEFAULT_ZOOM = 3.0;
     static SELECTION_CIRCLE = 10;
     static MINIMAL_SIZE = 4;
 
@@ -29,7 +32,7 @@ export class Constants {
         { id: Constants.ID_PEN, name: "Pen", isActive: false },
     ];
     
-    static CANVAS_ITEMS = [
+    static PAGE_ITEMS = [
         { id: Constants.ID_PLUS, name: "Zoom In", isActive: false },
         { id: Constants.ID_MINUS, name: "Zoom Out", isActive: false },
         { id: Constants.ID_GRID, name: "Grid", isActive: false },

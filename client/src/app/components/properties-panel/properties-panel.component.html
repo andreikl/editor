@@ -2,7 +2,7 @@
     <mat-expansion-panel>
         <mat-expansion-panel-header>
             <mat-panel-title>
-                Selected item properties
+                {{title}}
             </mat-panel-title>
         </mat-expansion-panel-header>
         <div #view></div>
@@ -13,11 +13,6 @@
                 Page properties
             </mat-panel-title>
         </mat-expansion-panel-header>
-        <mat-form-field>
-                <input matInput placeholder="First name">
-        </mat-form-field>
-        <mat-form-field>
-            <input matInput placeholder="Age">
-        </mat-form-field>
+        <app-controls-grid [items]=pageItems></app-controls-grid>
     </mat-expansion-panel>
 </mat-accordion>

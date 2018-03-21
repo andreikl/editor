@@ -26,9 +26,6 @@ export class ControlsGridComponent implements OnInit {
     ngOnInit() { }
 
     clickHandler($event: Event, item: ControlItem) {
-        const PLUS = 'plus';
-        const MINUS = 'minus';
-
         this.active = item;
         this.messageService.send({name: "control-item", data: item});
 
@@ -38,7 +35,10 @@ export class ControlsGridComponent implements OnInit {
 
             case Constants.ID_MINUS:
                 return this.appModel.zoom = this.appModel.zoom - Constants.DEFAULT_ZOOM_DELATA;
-            
+
+            case Constants.ID_GRID:
+                return this.appModel.grid = isNaN(this.appModel.grid)? Constants.DEFAULT_GRID: NaN;
+
             case Constants.ID_SAVE:
                 return this.svgService.save();
         };
