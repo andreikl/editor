@@ -61,6 +61,16 @@ const setup = () => __awaiter(this, void 0, void 0, function* () {
             }
         },
     });
+    server.route({
+        method: 'GET',
+        path: '/assets/{param*}',
+        handler: {
+            directory: {
+                path: './dist/web/assets',
+                listing: true
+            }
+        },
+    });
     yield server.start(function (err) {
         if (err) {
             console.log('\x1b[31m', err, '\x1b[0m');

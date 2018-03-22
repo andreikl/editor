@@ -20,6 +20,9 @@ import { PropertiesPanelComponent } from './components/properties-panel/properti
 import { PropertiesRectangleComponent } from './components/properties-rectangle/properties-rectangle.component';
 import { PropertiesIdleComponent } from './components/properties-idle/properties-idle.component';
 import { FormsModule } from '@angular/forms';
+import { UtilsService } from './services/utils.service';
+import { DrawService } from './services/draw.service';
+import { HistoryService } from './services/history.service';
 
 @NgModule({
     declarations: [
@@ -46,6 +49,9 @@ import { FormsModule } from '@angular/forms';
     ],
     providers: [
         MessageService,
+        HistoryService,
+        UtilsService,
+        DrawService,
         SvgService,
         AppModel
     ],

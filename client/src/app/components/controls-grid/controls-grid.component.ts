@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 
 import { ControlItem } from './../../models/control-item.model';
 import { MessageService } from './../../services/message.service';
+import { HistoryService } from '../../services/history.service';
 import { SvgService } from './../../services/svg.service';
 
 
@@ -19,6 +20,7 @@ export class ControlsGridComponent implements OnInit {
     active: ControlItem;
 
     constructor(private messageService: MessageService,
+        private historyService: HistoryService,
         private svgService: SvgService,
         private appModel: AppModel) {
     }
@@ -27,7 +29,6 @@ export class ControlsGridComponent implements OnInit {
 
     clickHandler($event: Event, item: ControlItem) {
         this.active = item;
-        this.messageService.send({name: "control-item", data: item});
 
         switch (item.id) {
             case Constants.ID_PLUS:
@@ -41,6 +42,18 @@ export class ControlsGridComponent implements OnInit {
 
             case Constants.ID_SAVE:
                 return this.svgService.save();
+
+            case Constants.ID_BACK:
+                return this.historyService.back();
+
+            case Constants.ID_NEXT:
+                return this.historyService.next();
+
+            case Constants.ID_LINE:
+            case Constants.ID_RECTANGLE:
+            case Constants.ID_PEN:
+            case Constants.ID_MOVE:
+                return this.appModel.selectedTool = item.id;
         };
     }
 }

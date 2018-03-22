@@ -62,10 +62,10 @@ const setup = async () => {
 
     server.route({
         method: 'GET',
-        path: '/assests/{param*}',
+        path: '/assets/{param*}',
         handler: {
             directory: {
-                path: './dist/web/assests',
+                path: './dist/web/assets',
                 listing: true
             }
         },

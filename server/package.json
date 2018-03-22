@@ -8,7 +8,7 @@
     "deploy": "node deploy.js",
     "build": "gulp scripts",
     "start": "node dist/server.js",
-    "local": "set NODE_ENV=localhost&& gulp scripts && npm start"
+    "local": "set NODE_ENV=localhost&&npm run deploy&&gulp scripts&&npm start"
   },
   "author": "Andrei Klimchuk <andrew.klimchuk@gmail.com>",
   "license": "MIT",

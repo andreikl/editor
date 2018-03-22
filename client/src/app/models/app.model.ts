@@ -17,13 +17,15 @@ export class AppModel extends BaseModel {
         'offset',
         'size',
         'selectedPrimitive',
+        'selectedTool',
+        'history',
         'data'
     ];
 
     public zoom: number = Constants.DEFAULT_ZOOM;
     public grid: number = Constants.DEFAULT_GRID;
     public net: number = Constants.DEFAULT_NET;
-    public net2: number = Constants.DEFAULT_NET2;
+    public net2: number = Constants.DEFAULT_NET_2;
     public offset: Point = {
         x: 0,
         y: 0
@@ -33,7 +35,11 @@ export class AppModel extends BaseModel {
         y: -1
     };
     public selectedPrimitive?: Primitive;
+    public selectedTool: string = Constants.ID_LINE;
+
+    public history: Primitive[][] = [[]];
     public data: Array<Primitive> = [];
+    
 
     constructor(protected messageService: MessageService) {
         super();

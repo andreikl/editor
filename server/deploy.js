@@ -3,6 +3,11 @@ const child_process = require('child_process');
 
 const expression = /.*(styles\.[\da-z]+\.bundle\.css).*(inline\.[\da-z]+\.bundle\.js).*(polyfills\.[\da-z]+\.bundle\.js).*(main\.[\da-z]+\.bundle\.js).*/;
 const deploy = async () => {
+    const res = child_process.execSync('cd ./../client&&ng build -prod&&cd ./../server', {
+        'encoding': 'utf8'
+    });
+    console.log(res);
+
     const cp = (source, target) => {
         const stat = fs.statSync(source);
         if (stat.isDirectory()) {
@@ -52,6 +57,8 @@ const deploy = async () => {
         cp('./../client/dist/3rdpartylicenses.txt', './dist/web/3rdpartylicenses.txt');
         cp('./../client/dist/favicon.png', './dist/web/favicon.png');
         fs.writeFileSync('./dist/web/index.html', data, 'utf8');
+
+        console.log('\x1b[32m', 'Client has been deployed!!!', '\x1b[0m');
     });
 }
 deploy();

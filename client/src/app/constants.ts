@@ -1,7 +1,10 @@
+import { Point } from "./models/point.interface";
+
 export class Constants {
     static APP_TITLE = 'Editor';
 
     static EVENT_MODEL_CHANGED = 'model-changed';
+    static EVENT_HISTORY = 'history';
     static EVENT_ZOOM = 'zoom';
     static EVENT_SIZE = 'size';
     static EVENT_GRID = 'grid';
@@ -15,14 +18,22 @@ export class Constants {
     static ID_GRID = 'grid';
     static ID_MOVE = 'move';
     static ID_SAVE = 'save';
+    static ID_BACK = 'back';
+    static ID_NEXT = 'next';
 
     static DEFAULT_ZOOM_DELATA = 0.1;
     static DEFAULT_GRID = 4.0;
     static DEFAULT_NET = 20.0;
-    static DEFAULT_NET2 = 5;
+    static DEFAULT_NET_2 = 5;
     static DEFAULT_ZOOM = 3.0;
     static SELECTION_CIRCLE = 10;
     static MINIMAL_SIZE = 4;
+    static MAXIMUM_HISTORY = 20;
+
+    static ZERO_POINT: Point = {
+        'x': 0,
+        'y': 0
+    };
 
     static SVG_FILENAME = 'svgfile.svg';
 
@@ -37,6 +48,8 @@ export class Constants {
         { id: Constants.ID_MINUS, name: "Zoom Out", isActive: false },
         { id: Constants.ID_GRID, name: "Grid", isActive: false },
         { id: Constants.ID_MOVE, name: "Move", isActive: false },
-        { id: Constants.ID_SAVE, name: "Save", isActive: false }
+        { id: Constants.ID_SAVE, name: "Save", isActive: false },
+        { id: Constants.ID_BACK, name: "Back", isActive: false },
+        { id: Constants.ID_NEXT, name: "Next", isActive: false }
     ];
 };

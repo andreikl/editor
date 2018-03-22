@@ -27,7 +27,6 @@ export class PropertiesPanelComponent implements OnInit {
     }
 
     ngOnInit() {
-        console.log(this.appModel);
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
             switch (message.data.name) {
                 case Constants.EVENT_SELECTED_PRIMITIVE:
