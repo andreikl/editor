@@ -8,22 +8,29 @@
     overflow: hidden;
 
     .canvas {
-        flex: 1 1 90%;
+        flex: 1;
+        width: 100%;
+        height: 70%;
     }
 
     .panel {
-        flex: 1 1 10%;
+        flex: 1;
+        width: 100%;
+        height: 30%;
+        overflow: auto;
     }
 
     @include breakpoint(medium) {
         flex-direction: row;
 
         .canvas {
-            flex: 1 1 80%;
+            width: 90%;
+            height: 100%;
         }
     
         .panel {
-            flex: 1 1 20%;
+            width: 10%;
+            height: 100%;
         }
     }
 }

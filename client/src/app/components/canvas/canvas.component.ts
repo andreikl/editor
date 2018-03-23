@@ -91,7 +91,6 @@ export class CanvasComponent implements OnInit {
                     'points': []
                 }
             } else { // creating primitive state
-                console.log("Creating primitive init", this.appModel.selectedPrimitive);
                 const point = this.utilsService.toNormal({
                     'x': start.x - rect.left,
                     'y': start.y - rect.top
@@ -123,7 +122,6 @@ export class CanvasComponent implements OnInit {
                 x.end.y = y.y;
                 this.drawScene(null);
             } else { // creating primitive state
-                console.log("Creating primitive init", this.appModel.selectedPrimitive, x);
                 x.end.x = y.x = point.x;
                 x.end.y = y.y = point.y;
                 if (this.appModel.selectedTool == Constants.ID_PEN) {
@@ -258,16 +256,16 @@ export class CanvasComponent implements OnInit {
             );
     }
 
-    ngAfterViewInit() {
-        this.resizeCanvas();
-    }
-
     resizeCanvas() {
         let canvas = this.canvas.nativeElement;
         const styles = getComputedStyle(canvas);
         canvas.width = (styles.width)? parseInt(styles.width.replace(/[^\d^\.]*/g, '')): 0;
         canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
         this.drawScene(null);
+
+        if (styles.width && styles.height) {
+            console.log('resize: ' + parseInt(styles.width.replace(/[^\d^\.]*/g, '')) + ', ' + parseInt(styles.height.replace(/[^\d^\.]*/g, '')));
+        }
     }
 
     selectPrimitive(data: Primitive) {
@@ -323,7 +321,6 @@ export class CanvasComponent implements OnInit {
         });
 
         if (data) {
-            console.log("draw: ", data.type);
             this.drawService.drawPrimitive(data, context);
         }
 

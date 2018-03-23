@@ -84,19 +84,26 @@ export class UtilsService {
         return (dist < Constants.SELECTION_CIRCLE * Constants.SELECTION_CIRCLE)? true: false;
     }
 
-    deepClone(object: any): any {
+    clone(object: any, isDeep: Boolean): any {
         let o = {};
         Object.keys(object).forEach(el => {
-            if (typeof(object[el]) == 'object') {
+            if (isDeep && typeof(object[el]) == 'object') {
                 if (Array.isArray(object[el])) {
-                    o[el] = object[el].map(arrel => this.deepClone(object[el]));
+                    o[el] = object[el].map(arrel => this.clone(object[el], true));
                 } else {
-                    o[el] = this.deepClone(object[el]);
+                    o[el] = this.clone(object[el], true);
                 }
             } else {
                 o[el] = object[el];
             }
         });
         return o;
+    }
+
+    defer(f, context) {
+        setTimeout(() => {
+            console.log('defer');
+            f.call(context);
+        }, 5000);
     }
 }

@@ -19,9 +19,8 @@ export class HistoryService {
             this.appModel.history.shift();
         }
 
-        this.appModel.history.unshift(this.appModel.data.map(o => this.utilsService.deepClone(o)));
+        this.appModel.history.unshift(this.appModel.data.map(o => this.utilsService.clone(o, true)));
         
-
         // remove last history entity if size exceeded
         if (this.appModel.history.length > Constants.MAXIMUM_HISTORY) {
             this.appModel.history.pop();
@@ -35,7 +34,7 @@ export class HistoryService {
         if (this.currentHistory > 0) {
             // get next app data from history
             this.appModel.selectedPrimitive = undefined;
-            this.appModel.data = this.appModel.history[--this.currentHistory];
+            this.appModel.data = this.appModel.history[--this.currentHistory].map(o => this.utilsService.clone(o, false));
 
             // generate history event
             this.appModel.history = this.appModel.history;
@@ -46,7 +45,7 @@ export class HistoryService {
         if (this.currentHistory + 1 < this.appModel.history.length) {
             // get previous app data from history
             this.appModel.selectedPrimitive = undefined;
-            this.appModel.data = this.appModel.history[++this.currentHistory];
+            this.appModel.data = this.appModel.history[++this.currentHistory].map(o => this.utilsService.clone(o, false));
 
             // generate history event
             this.appModel.history = this.appModel.history;

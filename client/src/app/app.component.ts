@@ -1,12 +1,13 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material';
-import {LayoutModule} from '@angular/cdk/layout';
+import { LayoutModule} from '@angular/cdk/layout';
 
 import { MessageService } from './services/message.service';
 import { ControlItem } from './models/control-item.model';
-import { Constants } from './constants';
+import { UtilsService } from './services/utils.service';
 import { AppModel } from './models/app.model';
+import { Constants } from './constants';
 
 @Component({
     selector: 'app-root',
@@ -14,6 +15,11 @@ import { AppModel } from './models/app.model';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
+    // reference to child component
+    //@ViewChild('canvas')
+    //canvas: CanvasComponent;
+
+
     title = Constants.APP_TITLE;
     toolItems = Constants.TOOL_ITEMS;
 
@@ -22,6 +28,7 @@ export class AppComponent implements OnInit {
 
     constructor (iconRegistry: MatIconRegistry,
         private messageService: MessageService,
+        private utilsService: UtilsService,
         sanitizer: DomSanitizer,
         private appModel: AppModel) {
 
@@ -33,18 +40,15 @@ export class AppComponent implements OnInit {
         iconRegistry.addSvgIcon(Constants.ID_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
         iconRegistry.addSvgIcon(Constants.ID_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/save.svg'));
         iconRegistry.addSvgIcon(Constants.ID_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_BACK, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_NEXT, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
     }
 
     ngOnInit() {
-        this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
-            if (message.data.name == Constants.EVENT_SIZE) {
-                if (this.appModel.size.x > this.appModel.size.y) {
-                    console.log('horizontal', this.appModel.size);
-                    this.layout = 'horizontal';
-                } else {
-                    console.log('vertical', this.appModel.size);
-                    this.layout = 'vertical';
-                }
+        window.addEventListener('DOMContentLoaded', () => {
+            this.appModel.size = {
+                'x': window.innerWidth,
+                'y': window.innerHeight
             }
         });
     }
