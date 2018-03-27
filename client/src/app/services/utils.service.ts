@@ -11,8 +11,8 @@ export class UtilsService {
 
     toNormal(point: Point, isGrid: Boolean): Point {
         const normal = {
-            'x': (point.x - this.appModel.offset.x) / this.appModel.zoom,
-            'y': (point.y - this.appModel.offset.y) / this.appModel.zoom
+            'x': point.x / this.appModel.zoom - this.appModel.offset.x,
+            'y': point.y / this.appModel.zoom - this.appModel.offset.y
         };
         return {
             'x': isGrid? this.appModel.grid * Math.round(normal.x / this.appModel.grid): normal.x,

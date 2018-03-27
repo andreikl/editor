@@ -95,6 +95,13 @@ export class CanvasComponent implements OnInit {
                     'x': start.x - rect.left,
                     'y': start.y - rect.top
                 }, !isNaN(this.appModel.grid));
+
+                console.log('Offset:', this.appModel.offset);
+                console.log('Point:', {
+                    'x': start.x - rect.left,
+                    'y': start.y - rect.top
+                });
+                console.log('Normal point:', point);
                 //const x = this.toNormal(start.x - rect.left, this.appModel.offset.x, !isNaN(this.appModel.grid));
                 //const y = this.toNormal(start.y - rect.top, this.appModel.offset.y, !isNaN(this.appModel.grid));
                 this.appModel.selectedPrimitive = {
