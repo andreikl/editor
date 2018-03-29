@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 
 import { MessageService } from '../../services/message.service';
 import { AppModel } from '../../models/app.model';
-import { Primitive } from '../../models/primitive.interface';
 
 @Component({
     //selector: 'app-properties-rectangle',

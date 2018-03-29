@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 
-import { Primitive } from '../models/primitive.interface';
 import { AppModel } from './../models/app.model';
 import { Constants } from '../constants';
 

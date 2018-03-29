@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 
-import { Primitive } from '../models/primitive.interface';
 import { AppModel } from '../models/app.model';
 import { UtilsService } from './utils.service';
 import { Constants } from '../constants';
@@ -104,12 +103,16 @@ export class DrawService {
         context.stroke();
     }
 
-    drawSelection(context) {
+    drawSelection(context, isGrid?: Boolean) {
         if (this.appModel.selectedPrimitive) {
-            const x1 = this.appModel.zoom * (this.appModel.offset.x + this.appModel.selectedPrimitive.start.x);
-            const y1 = this.appModel.zoom * (this.appModel.offset.y + this.appModel.selectedPrimitive.start.y);
-            const x2 = this.appModel.zoom * (this.appModel.offset.x + this.appModel.selectedPrimitive.end.x);
-            const y2 = this.appModel.zoom * (this.appModel.offset.y + this.appModel.selectedPrimitive.end.y);
+            const xn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.x / this.appModel.grid): this.appModel.selectedPrimitive.start.x;
+            const yn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.y / this.appModel.grid): this.appModel.selectedPrimitive.start.y;
+            const xn2 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.end.x / this.appModel.grid): this.appModel.selectedPrimitive.end.x;
+            const yn2 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.end.y / this.appModel.grid): this.appModel.selectedPrimitive.end.y;
+            const x1 = this.appModel.zoom * (this.appModel.offset.x + xn1);
+            const y1 = this.appModel.zoom * (this.appModel.offset.y + yn1);
+            const x2 = this.appModel.zoom * (this.appModel.offset.x + xn2);
+            const y2 = this.appModel.zoom * (this.appModel.offset.y + yn2);
 
             context.beginPath();
             context.arc(x1, y1, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
@@ -128,11 +131,15 @@ export class DrawService {
         }
     }
 
-    drawPrimitive(data: Primitive, context) {
-        const x1 = this.appModel.zoom * (this.appModel.offset.x + data.start.x);
-        const y1 = this.appModel.zoom * (this.appModel.offset.y + data.start.y);
-        const x2 = this.appModel.zoom * (this.appModel.offset.x + data.end.x);
-        const y2 = this.appModel.zoom * (this.appModel.offset.y + data.end.y);
+    drawPrimitive(data: Primitive, context, isGrid?: Boolean) {
+        const xn1 = isGrid? this.appModel.grid * Math.round(data.start.x / this.appModel.grid): data.start.x;
+        const yn1 = isGrid? this.appModel.grid * Math.round(data.start.y / this.appModel.grid): data.start.y;
+        const xn2 = isGrid? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
+        const yn2 = isGrid? this.appModel.grid * Math.round(data.end.y / this.appModel.grid): data.end.y;
+        const x1 = this.appModel.zoom * (this.appModel.offset.x + xn1);
+        const y1 = this.appModel.zoom * (this.appModel.offset.y + yn1);
+        const x2 = this.appModel.zoom * (this.appModel.offset.x + xn2);
+        const y2 = this.appModel.zoom * (this.appModel.offset.y + yn2);
 
         switch(data.type) {
             case Constants.ID_LINE:

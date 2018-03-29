@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 
-import { Point } from '../models/point.interface';
-import { AppModel } from '../models/app.model';
 import { Constants } from '../constants';
+
+import { AppModel } from '../models/app.model';
+
 
 @Injectable()
 export class UtilsService {
 
     constructor(private appModel: AppModel) { }
 
-    toNormal(point: Point, isGrid: Boolean): Point {
+    toNormal(point: Point, isGrid?: Boolean): Point {
         const normal = {
             'x': point.x / this.appModel.zoom - this.appModel.offset.x,
             'y': point.y / this.appModel.zoom - this.appModel.offset.y
@@ -32,6 +33,9 @@ export class UtilsService {
     }
 
     testLine(a: Point, b: Point, point: Point) {
+        //console.log('a: ', a);
+        //console.log('b: ', b);
+        //console.log('point: ', point);
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
@@ -81,7 +85,37 @@ export class UtilsService {
         context.lineTo(d.x, d.y);
         context.stroke();*/
 
-        return (dist < Constants.SELECTION_CIRCLE * Constants.SELECTION_CIRCLE)? true: false;
+        const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
+
+        return (dist < screenDist * screenDist)? true: false;
+    }
+
+    getPrimitivePoint(o: Primitive, sp: Point) {
+        const sc = Constants.SELECTION_CIRCLE;
+        const p1 = this.fromNormal(o.start);
+        const p2 = this.fromNormal(o.end);
+        if (sp.x >= p1.x - sc && sp.x <= p1.x + sc && sp.y >= p1.y - sc && sp.y <= p1.y + sc) {
+            return <PrimitivePoint> {
+                'point': o.start,
+                'direction': PointType.StartPoint,
+                'primitive': this.appModel.selectedPrimitive
+            };
+        } else if (sp.x >= p2.x - sc && sp.x <= p2.x + sc && sp.y >= p2.y - sc && sp.y <= p2.y + sc) {
+            return <PrimitivePoint> {
+                'point': o.end,
+                'direction': PointType.EndPoint,
+                'primitive': this.appModel.selectedPrimitive
+            };
+        } else {
+            return o.points.filter(point => {
+                const p = this.fromNormal(point);
+                return sp.x >= p.x - sc && sp.x <= p.x + sc && sp.y >= p.y - sc && sp.y <= p.y + sc;
+            }).map(point => <PrimitivePoint> {
+                'point': point,
+                'direction': PointType.MiddlePoint,
+                'primitive': this.appModel.selectedPrimitive
+            }).find(point => true);
+        }
     }
 
     clone(object: any, isDeep: Boolean): any {
@@ -105,5 +139,12 @@ export class UtilsService {
             console.log('defer');
             f.call(context);
         }, 5000);
+    }
+
+    getScreenPoint(rect, px, py) {
+        return {
+            'x': px - rect.left,
+            'y': py - rect.top
+        };
     }
 }

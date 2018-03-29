@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 
 import { MessageService } from './../services/message.service';
 
-import { Primitive } from './primitive.interface';
-import { Point } from './point.interface';
 import { BaseModel } from './base.model';
 import { Constants } from '../constants';
 

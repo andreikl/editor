@@ -1,5 +1,3 @@
-import { Point } from "./models/point.interface";
-
 export class Constants {
     static APP_TITLE = 'Editor';
 

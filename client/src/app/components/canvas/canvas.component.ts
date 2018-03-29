@@ -10,30 +10,15 @@ import 'rxjs/add/operator/do';
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
-import { MessageService } from './../../services/message.service';
-
 import { ControlItem } from './../../models/control-item.model';
 import { Message } from './../../models/message.model';
 import { Constants } from './../../constants';
 
-import { Primitive } from '../../models/primitive.interface';
-import { Point } from '../../models/point.interface';
-import { AppModel } from './../../models/app.model';
+import { MessageService } from './../../services/message.service';
+import { HistoryService } from '../../services/history.service';
 import { UtilsService } from '../../services/utils.service';
 import { DrawService } from '../../services/draw.service';
-import { HistoryService } from '../../services/history.service';
-
-enum PointType {
-    StartPoint,
-    MiddlePoint,
-    EndPoint
-};
-
-interface DraggablePoint {
-    direction: PointType;
-    point: Point;
-    primitive: Primitive;
-};
+import { AppModel } from './../../models/app.model';
 
 @Component({
     selector: 'div[app-canvas]',
@@ -44,7 +29,7 @@ export class CanvasComponent implements OnInit {
     @ViewChild('canvas')
     canvas: ElementRef;
 
-    draggablePoint?: DraggablePoint;
+    draggablePoint?: PrimitivePoint;
 
     constructor(private appModel: AppModel,
         private messageService: MessageService,
@@ -77,33 +62,23 @@ export class CanvasComponent implements OnInit {
             }
         });
 
-        const pointInitiator = (start: Point, rect): Primitive => {
+        const pointInitiator = (start: Point): Primitive => {
             if (this.draggablePoint) { // editing primitive state
                 draggablePoint = this.draggablePoint;
                 return draggablePoint;
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
-                const x = start.x - rect.left;
-                const y = start.y - rect.top;
                 return {
                     'type': this.appModel.selectedTool,
-                    'start': { 'x': x, 'y': y },
-                    'end': { 'x': x, 'y': y },
+                    'start': { 'x': start.x, 'y': start.y },
+                    'end': { 'x': start.x, 'y': start.y },
                     'points': []
                 }
             } else { // creating primitive state
                 const point = this.utilsService.toNormal({
-                    'x': start.x - rect.left,
-                    'y': start.y - rect.top
-                }, !isNaN(this.appModel.grid));
-
-                console.log('Offset:', this.appModel.offset);
-                console.log('Point:', {
-                    'x': start.x - rect.left,
-                    'y': start.y - rect.top
-                });
-                console.log('Normal point:', point);
-                //const x = this.toNormal(start.x - rect.left, this.appModel.offset.x, !isNaN(this.appModel.grid));
-                //const y = this.toNormal(start.y - rect.top, this.appModel.offset.y, !isNaN(this.appModel.grid));
+                    'x': start.x,
+                    'y': start.y
+                //}, !isNaN(this.appModel.grid));
+                }, false);
                 this.appModel.selectedPrimitive = {
                     'type': this.appModel.selectedTool,
                     'start': point,
@@ -115,10 +90,11 @@ export class CanvasComponent implements OnInit {
         }
 
         const pointAccumulator = (x: Primitive, y: Point): Primitive => {
-            const point = this.utilsService.toNormal(y, !isNaN(this.appModel.grid));
+            //const point = this.utilsService.toNormal(y, !isNaN(this.appModel.grid));
+            const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
-                draggablePoint.point.x = point.x;
-                draggablePoint.point.y = point.y;
+                draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
+                draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
                 this.drawScene(null);
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
                 this.appModel.offset = {
@@ -148,62 +124,137 @@ export class CanvasComponent implements OnInit {
             if (draggablePoint) {
                 draggablePoint = undefined;
                 this.historyService.snapshoot();
-            } else {
-                // check if it is just a click
-                if (Math.abs(data.end.x - data.start.x) < Constants.MINIMAL_SIZE && Math.abs(data.end.y - data.start.y) < Constants.MINIMAL_SIZE) {
-                    this.selectPrimitive(data);
-                } else if (data.type != Constants.ID_MOVE) {
-                    this.appModel.data.push(data);
-                    this.historyService.snapshoot();
-                }
+            } else if (data.type != Constants.ID_MOVE) {
+                data.start.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.x / this.appModel.grid): data.start.x;
+                data.start.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.y / this.appModel.grid): data.start.y;
+                data.end.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
+                data.end.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.y / this.appModel.grid): data.end.y;
+    
+                this.appModel.data.push(data);
+                this.historyService.snapshoot();
             }
         }
 
-        Observable.fromEvent(canvas, 'mousedown').subscribe(
-            (startEvent: MouseEvent) => {
-                startEvent.preventDefault();
-                startEvent.stopPropagation();
-                const rect = canvas.getBoundingClientRect();
-                Observable.fromEvent(document, 'mousemove')
-                    .map((event: MouseEvent)  => <Point> {
-                        'x': event.pageX - rect.left,
-                        'y': event.pageY - rect.top
-                    })
-                    .takeUntil(Observable.fromEvent(document, 'mouseup'))
-                    .reduce(pointAccumulator, pointInitiator({
-                        'x': startEvent.pageX,
-                        'y': startEvent.pageY
-                    }, rect))
-                    .subscribe(
-                        data => addPrimitive(data),
-                        e => console.log("moveEvent error", e)
-                    );
-            },
-            e => console.log("mousedownEvent error", e)
-        );
+        const isSelectionOrMoving = (start, end) => {
+            if (Math.abs(end.x - start.x) <= Constants.MINIMAL_SIZE && Math.abs(end.y - start.y) <= Constants.MINIMAL_SIZE)
+                return true;
+            else 
+                return false;
+        }
 
-        Observable.fromEvent(canvas, 'touchstart').subscribe(
-            (startEvent: TouchEvent) => {
-                startEvent.preventDefault();
-                startEvent.stopPropagation();
-                const rect = canvas.getBoundingClientRect();
-                Observable.fromEvent(document, 'touchmove')
-                    .map((event: TouchEvent)  =>  <Point> {
-                        'x': event.touches[0].pageX - rect.left,
-                        'y': event.touches[0].pageY - rect.top
-                    })
-                    .takeUntil(Observable.fromEvent(document, 'touchend'))
-                    .reduce(pointAccumulator, pointInitiator({
-                        'x': startEvent.touches[0].pageX,
-                        'y': startEvent.touches[0].pageY
-                    }, rect))
-                    .subscribe(
-                        data => addPrimitive(data),
-                        e => console.log("moveEvent error", e)
-                    );
-            },
-            e => console.log("touchstartEvent error", e)
-        );
+        // mouse and touch moving ----------
+        let movingSubscription; // true if moving event need to be subscribed
+        let startPoint; // undefined if right mousedown event need to be stored
+        Observable.fromEvent(canvas, 'mousemove')
+            .map((event: MouseEvent) => { // returns screen point and starts moving if delta reached
+                const sp = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY);
+                if (event.buttons == 1 && !startPoint)
+                    startPoint = sp;
+                if (!movingSubscription && startPoint && !isSelectionOrMoving(startPoint, sp)) {
+                    movingSubscription = Observable.fromEvent(document, 'mousemove')
+                        .map((event: MouseEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
+                        .takeUntil(Observable.fromEvent(document, 'mouseup'))
+                        .reduce(pointAccumulator, pointInitiator(startPoint))
+                        .subscribe(
+                            data => {
+                                movingSubscription.unsubscribe();
+                                movingSubscription = undefined;
+                                startPoint = undefined;
+                                return addPrimitive(data)
+                            },
+                            e => console.log("moveEvent error", e)
+                        );
+                }
+                return sp;
+            }).map((sp: Point) => { // get draggable point
+                if (this.appModel.selectedPrimitive)
+                    return this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, sp);
+                else 
+                    return undefined;
+            }).subscribe( // shows right cursor
+                o => {
+                    const cursor = this.canvas.nativeElement.style.cursor;
+                    if (o == undefined) {
+                        if (cursor != 'auto') {
+                            this.canvas.nativeElement.style.cursor = 'auto';
+                        }
+                        this.draggablePoint = undefined;
+                    } else {
+                        if (cursor != 'move') {
+                            this.canvas.nativeElement.style.cursor = 'move';
+                        }
+                        this.draggablePoint = o;
+                    }
+                },
+                e => console.log("wheelEvent error", e)
+            );
+
+        Observable.fromEvent(canvas, 'touchmove')
+            .map((event: TouchEvent) => { // returns screen point and starts moving if delta reached
+                const sp = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.touches[0].pageX, event.touches[0].pageY);
+                if (!startPoint)
+                    startPoint = sp;
+                if (!movingSubscription && startPoint && !isSelectionOrMoving(startPoint, sp)) {
+                    movingSubscription = Observable.fromEvent(document, 'touchmove')
+                        .map((event: TouchEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.touches[0].pageX, event.touches[0].pageY))
+                        .takeUntil(Observable.fromEvent(document, 'touchend'))
+                        .reduce(pointAccumulator, pointInitiator(startPoint))
+                        .subscribe(
+                            data => {
+                                movingSubscription.unsubscribe();
+                                movingSubscription = undefined;
+                                startPoint = undefined;
+                                return addPrimitive(data)
+                            },
+                            e => console.log("touchmoveEvent error", e)
+                        );
+                }
+                return sp;
+            })
+            .map((sp: Point) => { // get draggable point
+                if (this.appModel.selectedPrimitive)
+                    return this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, sp);
+                else 
+                    return undefined;
+            })
+            .subscribe(
+                o => this.draggablePoint = o,
+                e => console.log("wheelEvent error", e)
+            );
+
+        // end of mouse and touch moving
+        // mouse and touch clicking ----------
+        Observable.fromEvent(canvas, 'mousedown')
+            .map((event: MouseEvent) => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
+            .subscribe((start: Point) => {
+                let subscription = Observable.fromEvent(document, 'mouseup')
+                    .map((event: MouseEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
+                    .subscribe((end: Point) => {
+                        subscription.unsubscribe();
+                        if (isSelectionOrMoving(start, end)) {
+                            this.selectPrimitive(this.utilsService.toNormal({
+                                'x': start.x + (end.x - start.x) / 2,
+                                'y': start.y + (end.y - start.y) / 2,
+                            }));
+                        }
+                    }, e => console.log("mouseupEvent error", e));
+            }, e => console.log("mousedownEvent error", e));
+        Observable.fromEvent(canvas, 'touchstart')
+            .map((e: TouchEvent) => this.utilsService.toNormal(this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.touches[0].pageX, e.touches[0].pageY)))
+            .subscribe((start: Point) => {
+                let subscription = Observable.fromEvent(document, 'touchend')
+                    .map((endEvent: TouchEvent) => this.utilsService.toNormal(this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), endEvent.changedTouches[0].pageX, endEvent.changedTouches[0].pageY)))
+                    .subscribe((end: Point) => {
+                        subscription.unsubscribe();
+                        if (isSelectionOrMoving(start, end)) {
+                            this.selectPrimitive(this.utilsService.toNormal({
+                                'x': start.x + (end.x - start.x) / 2,
+                                'y': start.y + (end.y - start.y) / 2,
+                            }));
+                        };
+                    }, e => console.log("touchstopEvent error", e));
+            }, e => console.log("touchstartEvent error", e));
+        // end of mouse and touch clicking
 
         Observable.fromEvent(canvas, 'wheel').subscribe(
             (wheelEvent: WheelEvent) => {
@@ -213,54 +264,6 @@ export class CanvasComponent implements OnInit {
             },
             e => console.log("wheelEvent error", e)
         );
-
-        Observable.fromEvent(canvas, 'mousemove')
-            .map((event: MouseEvent) => {
-                if (this.appModel.selectedPrimitive) {
-                    const rect = canvas.getBoundingClientRect();
-                    const sc = Constants.SELECTION_CIRCLE;
-                    const x = event.pageX - rect.left;
-                    const y = event.pageY - rect.top;
-
-                    const p1 = this.utilsService.fromNormal(this.appModel.selectedPrimitive.start);
-                    const p2 = this.utilsService.fromNormal(this.appModel.selectedPrimitive.end);
-                    if (x >= p1.x - sc && x <= p1.x + sc && y >= p1.y - sc && y <= p1.y + sc) {
-                        return <DraggablePoint> {
-                            'point': this.appModel.selectedPrimitive.start,
-                            'direction': PointType.StartPoint,
-                            'primitive': this.appModel.selectedPrimitive
-                        };
-                    } else if (x >= p2.x - sc && x <= p2.x + sc && y >= p2.y - sc && y <= p2.y + sc) {
-                        return <DraggablePoint> {
-                            'point': this.appModel.selectedPrimitive.end,
-                            'direction': PointType.EndPoint,
-                            'primitive': this.appModel.selectedPrimitive
-                        };
-                    } else {
-                        return this.appModel.selectedPrimitive.points.filter(point => {
-                            const p = this.utilsService.fromNormal(point);
-                            return x >= p.x - sc && x <= p.x + sc && y >= p.y - sc && y <= p.y + sc;
-                        }).map(point => <DraggablePoint> {
-                            'point': point,
-                            'direction': PointType.MiddlePoint,
-                            'primitive': this.appModel.selectedPrimitive
-                        }).find(point => true);
-                    }
-                }
-                return undefined;
-            })
-            .subscribe(
-                o => {
-                    if (o != undefined) {
-                        this.canvas.nativeElement.style.cursor = 'move';
-                        this.draggablePoint = o;
-                    } else {
-                        this.canvas.nativeElement.style.cursor = 'auto';
-                        this.draggablePoint = undefined;
-                    }
-                },
-                e => console.log("wheelEvent error", e)
-            );
     }
 
     resizeCanvas() {
@@ -275,31 +278,31 @@ export class CanvasComponent implements OnInit {
         }
     }
 
-    selectPrimitive(data: Primitive) {
+    selectPrimitive(point: Point) {
         this.appModel.selectedPrimitive = this.appModel.data.find(o => {
             switch(o.type) {
                 case Constants.ID_LINE:
-                    return this.utilsService.testLine(o.start, o.end, data.start);
+                    return this.utilsService.testLine(o.start, o.end, point);
 
                 case Constants.ID_RECTANGLE:
                     return this.utilsService.testLine(o.start, {
                         'x': o.start.x,
                         'y': o.end.y
-                    }, data.start) || this.utilsService.testLine({
+                    }, point) || this.utilsService.testLine({
                         'x': o.start.x,
                         'y': o.end.y
-                    }, o.end, data.start) || this.utilsService.testLine(o.end, {
+                    }, o.end, point) || this.utilsService.testLine(o.end, {
                         'x': o.end.x,
                         'y': o.start.y
-                    }, data.start) || this.utilsService.testLine({
+                    }, point) || this.utilsService.testLine({
                         'x': o.end.x,
                         'y': o.start.y
-                    }, o.start, data.start);
+                    }, o.start, point);
     
                 case Constants.ID_PEN:
                     return o.points.reduce((x, y) => {
                         return {
-                            'res': x.res || this.utilsService.testLine(x.point, y, data.start),
+                            'res': x.res || this.utilsService.testLine(x.point, y, point),
                             'point': y
                         }
                     }, {
@@ -328,9 +331,9 @@ export class CanvasComponent implements OnInit {
         });
 
         if (data) {
-            this.drawService.drawPrimitive(data, context);
+            this.drawService.drawPrimitive(data, context, !isNaN(this.appModel.grid));
         }
 
-        this.drawService.drawSelection(context);
+        this.drawService.drawSelection(context, !isNaN(this.appModel.grid));
     }
 }
