@@ -123,7 +123,7 @@ export class UtilsService {
         Object.keys(object).forEach(el => {
             if (isDeep && typeof(object[el]) == 'object') {
                 if (Array.isArray(object[el])) {
-                    o[el] = object[el].map(arrel => this.clone(object[el], true));
+                    o[el] = object[el].map(arrel => this.clone(arrel, true));
                 } else {
                     o[el] = this.clone(object[el], true);
                 }
@@ -136,7 +136,6 @@ export class UtilsService {
 
     defer(f, context) {
         setTimeout(() => {
-            console.log('defer');
             f.call(context);
         }, 5000);
     }
