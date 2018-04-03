@@ -37,7 +37,6 @@ export class HistoryService {
 
             // generate history event
             this.appModel.history = this.appModel.history;
-            console.log(this.appModel.data);
         }
     }
 
@@ -49,7 +48,6 @@ export class HistoryService {
 
             // generate history event
             this.appModel.history = this.appModel.history;
-            console.log(this.appModel.data);
         }
     }
 }

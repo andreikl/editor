@@ -55,7 +55,7 @@ export class CanvasComponent implements OnInit {
                     return this.drawScene(null);
 
                 case Constants.EVENT_SELECTED_PRIMITIVE:
-                    return this.drawScene(null);
+                    return;// this.drawScene(null);
 
                 case Constants.EVENT_SIZE:
                     return this.resizeCanvas();
@@ -95,7 +95,7 @@ export class CanvasComponent implements OnInit {
             if (draggablePoint) { // editing primitive state
                 draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
                 draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
-                this.drawScene(null);
+                //this.drawScene(null);
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
                 this.appModel.offset = {
                     x: this.appModel.offset.x + (y.x - x.end.x) / this.appModel.zoom,
@@ -115,7 +115,7 @@ export class CanvasComponent implements OnInit {
                         x.points.push(y);
                     }
                 }
-                this.drawScene(x);
+                //this.drawScene(x);
             }
             return x;
         }
@@ -148,9 +148,12 @@ export class CanvasComponent implements OnInit {
         Observable.fromEvent(canvas, 'mousemove')
             .map((event: MouseEvent) => { // returns screen point and starts moving if delta reached
                 const sp = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY);
+                if (event.buttons != 1) {
+                    startPoint = undefined;
+                }
                 if (event.buttons == 1 && !startPoint)
                     startPoint = sp;
-                if (!movingSubscription && startPoint && !isSelectionOrMoving(startPoint, sp)) {
+                if (!movingSubscription && event.buttons == 1 && startPoint && !isSelectionOrMoving(startPoint, sp)) {
                     movingSubscription = Observable.fromEvent(document, 'mousemove')
                         .map((event: MouseEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
                         .takeUntil(Observable.fromEvent(document, 'mouseup'))
@@ -284,6 +287,11 @@ export class CanvasComponent implements OnInit {
                 case Constants.ID_LINE:
                     return this.utilsService.testLine(o.start, o.end, point);
 
+                case Constants.ID_ARC:
+                    const canvas = this.canvas.nativeElement;
+                    const context = canvas.getContext("2d");
+                    return this.utilsService.testLine(o.start, o.end, point, context);
+
                 case Constants.ID_RECTANGLE:
                     return this.utilsService.testLine(o.start, {
                         'x': o.start.x,
@@ -314,10 +322,10 @@ export class CanvasComponent implements OnInit {
                     return false;
             }
         });
-        this.drawScene(null);
     }
 
     drawScene(data: Primitive | null) {
+        console.trace();
         const canvas = this.canvas.nativeElement;
         const context = canvas.getContext("2d");
 

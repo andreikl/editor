@@ -103,6 +103,13 @@ export class DrawService {
         context.stroke();
     }
 
+    drawArc(x1, y1, rx, ry, data, context) {
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.ellipse(x1, y1, rx, ry, 0, 0, 2 * Math.PI);
+        context.stroke();
+    }
+
     drawSelection(context, isGrid?: Boolean) {
         if (this.appModel.selectedPrimitive) {
             const xn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.x / this.appModel.grid): this.appModel.selectedPrimitive.start.x;
@@ -150,6 +157,9 @@ export class DrawService {
 
             case Constants.ID_PEN:
                 return this.drawPen(x1, y1, x2, y2, data, context);
+
+            case Constants.ID_ARC:
+                return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), data, context);
         }
     }
 }

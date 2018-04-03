@@ -18,8 +18,9 @@ export class Constants {
     static ID_SAVE = 'save';
     static ID_BACK = 'back';
     static ID_NEXT = 'next';
+    static ID_ARC = 'arc';
 
-    static DEFAULT_ZOOM_DELATA = 0.1;
+    static DEFAULT_ZOOM_DELATA = 1.0;
     static DEFAULT_GRID = 4.0;
     static DEFAULT_NET = 20.0;
     static DEFAULT_NET_2 = 5;
@@ -39,6 +40,7 @@ export class Constants {
         { id: Constants.ID_LINE, name: "Line", isActive: true },
         { id: Constants.ID_RECTANGLE, name: "Rectangle", isActive: false },
         { id: Constants.ID_PEN, name: "Pen", isActive: false },
+        { id: Constants.ID_ARC, name: "Arc", isActive: false },
     ];
     
     static PAGE_ITEMS = [
