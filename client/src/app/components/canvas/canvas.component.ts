@@ -55,7 +55,7 @@ export class CanvasComponent implements OnInit {
                     return this.drawScene(null);
 
                 case Constants.EVENT_SELECTED_PRIMITIVE:
-                    return;// this.drawScene(null);
+                    return this.drawScene(null);
 
                 case Constants.EVENT_SIZE:
                     return this.resizeCanvas();
@@ -79,11 +79,22 @@ export class CanvasComponent implements OnInit {
                     'y': start.y
                 //}, !isNaN(this.appModel.grid));
                 }, false);
-                this.appModel.selectedPrimitive = {
-                    'type': this.appModel.selectedTool,
-                    'start': point,
-                    'end': { 'x': point.x, 'y': point.y },
-                    'points': []
+                if (this.appModel.selectedTool == Constants.ID_ARC) {
+                    this.appModel.selectedPrimitive = <Primitive> {
+                        'type': this.appModel.selectedTool,
+                        'start': point,
+                        'end': { 'x': point.x, 'y': point.y },
+                        'points': [],
+                        'startAngle': 0,
+                        'endAngle': 2 * Math.PI
+                    }
+                } else {
+                    this.appModel.selectedPrimitive = {
+                        'type': this.appModel.selectedTool,
+                        'start': point,
+                        'end': { 'x': point.x, 'y': point.y },
+                        'points': []
+                    }
                 }
                 return this.appModel.selectedPrimitive;
             }
@@ -93,9 +104,24 @@ export class CanvasComponent implements OnInit {
             //const point = this.utilsService.toNormal(y, !isNaN(this.appModel.grid));
             const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
-                draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
-                draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
-                //this.drawScene(null);
+                if (draggablePoint.direction == PointType.StartPoint) { // keep proportion
+                    const oldx = draggablePoint.point.x;
+                    const oldy = draggablePoint.point.y;
+                    draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
+                    draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
+                    const deltax = draggablePoint.point.x - oldx;
+                    const deltay = draggablePoint.point.y - oldy;
+                    draggablePoint.primitive.end.x += deltax;
+                    draggablePoint.primitive.end.y += deltay;
+                    draggablePoint.primitive.points.forEach(o => {
+                        o.x += deltax;
+                        o.y += deltay;
+                    });
+                } else {
+                    draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
+                    draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
+                }
+                this.drawScene(null);
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
                 this.appModel.offset = {
                     x: this.appModel.offset.x + (y.x - x.end.x) / this.appModel.zoom,
@@ -115,7 +141,7 @@ export class CanvasComponent implements OnInit {
                         x.points.push(y);
                     }
                 }
-                //this.drawScene(x);
+                this.drawScene(x);
             }
             return x;
         }
@@ -276,9 +302,9 @@ export class CanvasComponent implements OnInit {
         canvas.height = (styles.height)? parseInt(styles.height.replace(/[^\d^\.]*/g, '')): 0;
         this.drawScene(null);
 
-        if (styles.width && styles.height) {
-            console.log('resize: ' + parseInt(styles.width.replace(/[^\d^\.]*/g, '')) + ', ' + parseInt(styles.height.replace(/[^\d^\.]*/g, '')));
-        }
+        //if (styles.width && styles.height) {
+        //    console.log('resize: ' + parseInt(styles.width.replace(/[^\d^\.]*/g, '')) + ', ' + parseInt(styles.height.replace(/[^\d^\.]*/g, '')));
+        //}
     }
 
     selectPrimitive(point: Point) {
@@ -288,9 +314,9 @@ export class CanvasComponent implements OnInit {
                     return this.utilsService.testLine(o.start, o.end, point);
 
                 case Constants.ID_ARC:
-                    const canvas = this.canvas.nativeElement;
-                    const context = canvas.getContext("2d");
-                    return this.utilsService.testLine(o.start, o.end, point, context);
+                    //const canvas = this.canvas.nativeElement;
+                    //const context = canvas.getContext("2d");
+                    return this.utilsService.testEllipse(o.start, o.end, point);
 
                 case Constants.ID_RECTANGLE:
                     return this.utilsService.testLine(o.start, {
@@ -325,7 +351,6 @@ export class CanvasComponent implements OnInit {
     }
 
     drawScene(data: Primitive | null) {
-        console.trace();
         const canvas = this.canvas.nativeElement;
         const context = canvas.getContext("2d");
 

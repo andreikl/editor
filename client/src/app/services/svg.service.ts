@@ -21,19 +21,45 @@ export class SvgService {
     }
 
     private getHeader() {
+        const getStart = (o) => {
+            o = this.normalize(o);
+            console.log('start norm:', o.start);
+            if (o.type = Constants.ID_ARC) {
+                return {
+                    'x': o.start.x - Math.abs(o.end.x - o.start.x),
+                    'y': o.start.y - Math.abs(o.end.y - o.start.y)
+                }
+            } else {
+                return o.start;
+            }
+        }
+        const getEnd = (o) => {
+            o = this.normalize(o);
+            console.log('end norm:', o.end);
+            return o.end;
+        }
+
         const r = this.appModel.data.reduce((x, y) => {
-            x = this.normalize(x);
-            y = this.normalize(y);
-            return <Primitive> {
+            console.log('x:', x);
+            console.log('y:', y);
+            const ys = getStart(y);
+            const ye = getEnd(y);
+            console.log('startx ' + x.start.x < ys.x? x.start.x: ys.x);
+            console.log('starty ' + x.start.y < ys.y? x.start.y: ys.y);
+            console.log('endx ' + x.end.x > ye.x? x.end.x: ye.x);
+            console.log('endy ' + x.end.y > ye.y? x.end.y: ye.y);
+            const rect = <Primitive> {
                 'start': {
-                    'x': x.start.x < y.start.x? x.start.x: y.start.x,
-                    'y': x.start.y < y.start.y? x.start.y: y.start.y
+                    'x': x.start.x < ys.x? x.start.x: ys.x,
+                    'y': x.start.y < ys.y? x.start.y: ys.y
                 },
                 'end': {
-                    'x': x.end.x > y.end.x? x.end.x: y.end.x,
-                    'y': x.end.y > y.end.y? x.end.y: y.end.y
+                    'x': x.end.x > ye.x? x.end.x: ye.x,
+                    'y': x.end.y > ye.y? x.end.y: ye.y
                 }
             };
+            console.log(rect);
+            return rect;
         }, <Primitive> {
             'start': {
                 'x': NaN,
@@ -55,13 +81,27 @@ export class SvgService {
                     return '<line x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_RECTANGLE:
-                    const no = this.normalize(o);
-                    return '<rect x="' + no.start.x + '" y="' + no.start.y + '" width="' + (no.end.x - no.start.x) + '" height="' + (no.end.y - no.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    o = this.normalize(o);
+                    return '<rect x="' + o.start.x + '" y="' + o.start.y + '" width="' + (o.end.x - o.start.x) + '" height="' + (o.end.y - o.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_PEN:
                     return '<polyline points="' + o.start.x + ',' + o.start.y + ' '
                         + o.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
                         + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+
+                case Constants.ID_ARC:
+                    const dataArc = <PrimitiveArc>o;
+                    const rx = Math.abs(o.end.x - o.start.x);
+                    const ry = Math.abs(o.end.x - o.start.x);
+                    const startx = rx * Math.cos(dataArc.startAngle);
+                    const starty = ry * Math.sin(dataArc.startAngle);
+                    const endx = rx * Math.cos(dataArc.endAngle);
+                    const endy = ry * Math.sin(dataArc.endAngle);
+
+                    if (startx == endx && starty == endy)
+                        return '<path d="M' + (o.start.x + startx) + ',' + (o.start.y + starty) + ' A' + rx + ',' + ry + ' 0 0,1 ' + (o.start.x + endx) + ',' + (o.start.y + endy) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    else
+                        return '<ellipse cx="' + o.start.x + '" cy="' + o.start.y + '" rx="' + rx + '" ry="' + ry + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 default:
                     return '';

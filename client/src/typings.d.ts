@@ -22,6 +22,11 @@ interface Primitive {
     'points': Array<Point>;
 }
 
+interface PrimitiveArc extends Primitive {
+    'startAngle': number;
+    'endAngle': number;
+}
+
 interface PrimitivePoint {
     'direction': PointType;
     'point': Point;

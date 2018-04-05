@@ -102,6 +102,9 @@ $app-theme: mat-light-theme($app-primary, $app-accent);
 // ------------------------------
 // Meterial design fixes
 // ------------------------------
+.mat-form-field {
+    width: 100%;
+}
 .panel {
     //override input width
     .mat-form-field-infix {

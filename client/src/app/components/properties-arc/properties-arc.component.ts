@@ -4,11 +4,11 @@ import { MessageService } from '../../services/message.service';
 import { AppModel } from '../../models/app.model';
 
 @Component({
-    //selector: 'app-properties-rectangle',
-    templateUrl: './properties-rectangle.component.html',
-    styleUrls: ['./properties-rectangle.component.scss']
+    selector: 'app-properties-arc',
+    templateUrl: './properties-arc.component.html',
+    styleUrls: ['./properties-arc.component.scss']
 })
-export class PropertiesRectangleComponent implements OnInit {
+export class PropertiesArcComponent implements OnInit {
     constructor(private appModel: AppModel, private messageService: MessageService) { }
 
     primitive: Primitive;

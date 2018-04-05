@@ -104,9 +104,11 @@ export class DrawService {
     }
 
     drawArc(x1, y1, rx, ry, data, context) {
+        const arc:PrimitiveArc = data;
+
         context.beginPath();
-        context.moveTo(x1, y1);
-        context.ellipse(x1, y1, rx, ry, 0, 0, 2 * Math.PI);
+        //context.moveTo(x1, y1);
+        context.ellipse(x1, y1, rx, ry, 0, data.startAngle, data.endAngle);
         context.stroke();
     }
 

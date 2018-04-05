@@ -2,6 +2,7 @@ import { Component, OnInit, ComponentFactoryResolver, ViewContainerRef, ViewChil
 
 import { PropertiesRectangleComponent } from '../properties-rectangle/properties-rectangle.component';
 import { PropertiesIdleComponent } from '../properties-idle/properties-idle.component';
+import { PropertiesArcComponent } from '../properties-arc/properties-arc.component';
 import { MessageService } from '../../services/message.service';
 import { ControlItem } from '../../models/control-item.model';
 import { SvgService } from '../../services/svg.service';
@@ -42,6 +43,7 @@ export class PropertiesPanelComponent implements OnInit {
             || this.appModel.selectedPrimitive.type == Constants.ID_PEN)) {
             //clear all content and load new
             this.view.clear();
+
             const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesRectangleComponent);
             this.view.createComponent(componentFactory);
 
@@ -52,6 +54,13 @@ export class PropertiesPanelComponent implements OnInit {
             } else if (this.appModel.selectedPrimitive.type == Constants.ID_PEN) {
                 this.title = 'Pen properies';
             }
+        } else if (this.appModel.selectedPrimitive && this.appModel.selectedPrimitive.type == Constants.ID_ARC) {
+            this.view.clear();
+
+            const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesArcComponent);
+            this.view.createComponent(componentFactory);
+
+            this.title = 'Arc properies';
         } else {
             const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesIdleComponent);
             //clear all content and load new
