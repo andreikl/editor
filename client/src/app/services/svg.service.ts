@@ -23,8 +23,7 @@ export class SvgService {
     private getHeader() {
         const getStart = (o) => {
             o = this.normalize(o);
-            console.log('start norm:', o.start);
-            if (o.type = Constants.ID_ARC) {
+            if (o.type == Constants.ID_ARC) {
                 return {
                     'x': o.start.x - Math.abs(o.end.x - o.start.x),
                     'y': o.start.y - Math.abs(o.end.y - o.start.y)
@@ -35,19 +34,12 @@ export class SvgService {
         }
         const getEnd = (o) => {
             o = this.normalize(o);
-            console.log('end norm:', o.end);
             return o.end;
         }
 
         const r = this.appModel.data.reduce((x, y) => {
-            console.log('x:', x);
-            console.log('y:', y);
             const ys = getStart(y);
             const ye = getEnd(y);
-            console.log('startx ' + x.start.x < ys.x? x.start.x: ys.x);
-            console.log('starty ' + x.start.y < ys.y? x.start.y: ys.y);
-            console.log('endx ' + x.end.x > ye.x? x.end.x: ye.x);
-            console.log('endy ' + x.end.y > ye.y? x.end.y: ye.y);
             const rect = <Primitive> {
                 'start': {
                     'x': x.start.x < ys.x? x.start.x: ys.x,
@@ -58,16 +50,15 @@ export class SvgService {
                     'y': x.end.y > ye.y? x.end.y: ye.y
                 }
             };
-            console.log(rect);
             return rect;
         }, <Primitive> {
             'start': {
-                'x': NaN,
-                'y': NaN
+                'x': Number.MAX_VALUE,
+                'y': Number.MAX_VALUE
             },
             'end': {
-                'x': NaN,
-                'y': NaN
+                'x': Number.MIN_VALUE,
+                'y': Number.MIN_VALUE
             }
         });
 
