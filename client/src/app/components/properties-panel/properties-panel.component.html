@@ -13,7 +13,36 @@
                 Page properties
             </mat-panel-title>
         </mat-expansion-panel-header>
-        <app-controls-grid [items]=pageItems></app-controls-grid>
+        <ul class="component controls-grid">
+            <li class="item" (click)="clickHandler($event, pageItems[0])">
+                <mat-icon svgIcon="{{pageItems[0].id}}">{{pageItems[0].id}}</mat-icon>
+                <span class="name">{{ pageItems[0].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[1])">
+                <mat-icon svgIcon="{{pageItems[1].id}}">{{pageItems[1].id}}</mat-icon>
+                <span class="name">{{ pageItems[1].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[2])">
+                <mat-icon svgIcon="{{pageItems[2].id}}">{{pageItems[2].id}}</mat-icon>
+                <span class="name">{{ pageItems[2].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[3])">
+                <mat-icon svgIcon="{{pageItems[3].id}}">{{pageItems[3].id}}</mat-icon>
+                <span class="name">{{ pageItems[3].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[4])">
+                <mat-icon svgIcon="{{pageItems[4].id}}">{{pageItems[4].id}}</mat-icon>
+                <span class="name">{{ pageItems[4].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[5])">
+                <mat-icon svgIcon="{{pageItems[5].id}}">{{pageItems[5].id}}</mat-icon>
+                <span class="name">{{ pageItems[5].name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, pageItems[6])">
+                <mat-icon svgIcon="{{pageItems[6].id}}">{{pageItems[6].id}}</mat-icon>
+                <span class="name">{{ pageItems[6].name }}</span>
+            </li>
+        </ul>
     </mat-expansion-panel>
     <mat-expansion-panel>
         <mat-expansion-panel-header>

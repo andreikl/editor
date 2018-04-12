@@ -15,14 +15,6 @@ import { Constants } from './constants';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-    // reference to child component
-    //@ViewChild('canvas')
-    //canvas: CanvasComponent;
-
-
-    title = Constants.APP_TITLE;
-    toolItems = Constants.TOOL_ITEMS;
-
     // default layout definition
     layout = 'horizontal';
 

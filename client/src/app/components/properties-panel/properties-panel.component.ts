@@ -4,10 +4,12 @@ import { PropertiesRectangleComponent } from '../properties-rectangle/properties
 import { PropertiesIdleComponent } from '../properties-idle/properties-idle.component';
 import { PropertiesArcComponent } from '../properties-arc/properties-arc.component';
 import { MessageService } from '../../services/message.service';
+import { HistoryService } from '../../services/history.service';
 import { ControlItem } from '../../models/control-item.model';
 import { SvgService } from '../../services/svg.service';
 import { AppModel } from '../../models/app.model';
 import { Constants } from '../../constants';
+
 
 @Component({
     selector: 'div[app-properties-panel]',
@@ -22,6 +24,7 @@ export class PropertiesPanelComponent implements OnInit {
     pageItems = Constants.PAGE_ITEMS;
 
     constructor(private appModel: AppModel,
+        private historyService: HistoryService,
         private svgService: SvgService,
         private messageService: MessageService,
         private componentFactoryResolver: ComponentFactoryResolver) {
@@ -35,6 +38,31 @@ export class PropertiesPanelComponent implements OnInit {
             }
         });
         this.drawWindow();
+    }
+
+    clickHandler($event: Event, item: ControlItem) {
+        switch (item.id) {
+            case Constants.ID_PLUS:
+                return this.appModel.zoom = this.appModel.zoom + Constants.DEFAULT_ZOOM_DELATA;
+
+            case Constants.ID_MINUS:
+                return this.appModel.zoom = this.appModel.zoom - Constants.DEFAULT_ZOOM_DELATA;
+
+            case Constants.ID_GRID:
+                return this.appModel.grid = isNaN(this.appModel.grid)? Constants.DEFAULT_GRID: NaN;
+
+            case Constants.ID_SAVE:
+                return this.svgService.save();
+
+            case Constants.ID_BACK:
+                return this.historyService.back();
+
+            case Constants.ID_NEXT:
+                return this.historyService.next();
+
+            case Constants.ID_MOVE:
+                return this.appModel.selectedTool = item.id;
+        };
     }
 
     drawWindow() {
