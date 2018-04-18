@@ -14,33 +14,40 @@
             </mat-panel-title>
         </mat-expansion-panel-header>
         <ul class="component controls-grid">
-            <li class="item" (click)="clickHandler($event, pageItems[0])">
-                <mat-icon svgIcon="{{pageItems[0].id}}">{{pageItems[0].id}}</mat-icon>
-                <span class="name">{{ pageItems[0].name }}</span>
+            <li class="item" (click)="clickHandler($event, pageItems.plus)">
+                <mat-icon svgIcon="{{pageItems.plus.id}}">{{pageItems.plus.id}}</mat-icon>
+                <span class="name">{{ pageItems.plus.name }}</span>
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[1])">
-                <mat-icon svgIcon="{{pageItems[1].id}}">{{pageItems[1].id}}</mat-icon>
-                <span class="name">{{ pageItems[1].name }}</span>
+            <li class="item" (click)="clickHandler($event, pageItems.minus)">
+                <mat-icon svgIcon="{{pageItems.minus.id}}">{{pageItems.minus.id}}</mat-icon>
+                <span class="name">{{ pageItems.minus.name }}</span>
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[2])">
-                <mat-icon svgIcon="{{pageItems[2].id}}">{{pageItems[2].id}}</mat-icon>
-                <span class="name">{{ pageItems[2].name }}</span>
+            <li class="item" (click)="clickHandler($event, pageItems.grid)">
+                <mat-icon svgIcon="{{pageItems.grid.id}}">{{pageItems.grid.id}}</mat-icon>
+                <span class="name">{{ pageItems.grid.name }}</span>
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[3])">
-                <mat-icon svgIcon="{{pageItems[3].id}}">{{pageItems[3].id}}</mat-icon>
-                <span class="name">{{ pageItems[3].name }}</span>
+            <li class="item" (click)="clickHandler($event, pageItems.move)">
+                <mat-icon svgIcon="{{pageItems.move.id}}">{{pageItems.move.id}}</mat-icon>
+                <span class="name">{{ pageItems.move.name }}</span>
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[4])">
-                <mat-icon svgIcon="{{pageItems[4].id}}">{{pageItems[4].id}}</mat-icon>
-                <span class="name">{{ pageItems[4].name }}</span>
+        </ul>
+        <ul class="component controls-grid">
+            <li class="item" (click)="clickHandler($event, fileItems.save)">
+                <mat-icon svgIcon="{{fileItems.save.id}}">{{fileItems.save.id}}</mat-icon>
+                <span class="name">{{ fileItems.save.name }}</span>
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[5])">
-                <mat-icon svgIcon="{{pageItems[5].id}}">{{pageItems[5].id}}</mat-icon>
-                <span class="name">{{ pageItems[5].name }}</span>
+            <li class="item">
+                <mat-icon svgIcon="{{fileItems.load.id}}">{{fileItems.load.id}}</mat-icon>
+                <span class="name">{{ fileItems.load.name }}</span>
+                <input type="file" name="svgFile" id="svgFile" (change)="loadHandler($event)">
             </li>
-            <li class="item" (click)="clickHandler($event, pageItems[6])">
-                <mat-icon svgIcon="{{pageItems[6].id}}">{{pageItems[6].id}}</mat-icon>
-                <span class="name">{{ pageItems[6].name }}</span>
+            <li class="item" (click)="clickHandler($event, fileItems.back)">
+                <mat-icon svgIcon="{{fileItems.back.id}}">{{fileItems.back.id}}</mat-icon>
+                <span class="name">{{ fileItems.back.name }}</span>
+            </li>
+            <li class="item" (click)="clickHandler($event, fileItems.next)">
+                <mat-icon svgIcon="{{fileItems.next.id}}">{{fileItems.next.id}}</mat-icon>
+                <span class="name">{{ fileItems.next.name }}</span>
             </li>
         </ul>
     </mat-expansion-panel>

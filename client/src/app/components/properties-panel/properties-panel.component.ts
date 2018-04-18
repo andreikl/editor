@@ -22,6 +22,7 @@ export class PropertiesPanelComponent implements OnInit {
 
     title: string;
     pageItems = Constants.PAGE_ITEMS;
+    fileItems = Constants.FILE_ITEMS;
 
     constructor(private appModel: AppModel,
         private historyService: HistoryService,
@@ -38,6 +39,25 @@ export class PropertiesPanelComponent implements OnInit {
             }
         });
         this.drawWindow();
+    }
+
+    loadHandler(event: any) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // get first file
+        const getFile = (): File | undefined => {
+            if (event.target.files && event.target.files.length > 0) {
+                return event.target.files[0];
+            } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                return event.dataTransfer.files[0];
+            }
+            return undefined;
+        }
+        const file = getFile();
+        if (file) {
+            this.svgService.load(file);
+        }
     }
 
     clickHandler($event: Event, item: ControlItem) {

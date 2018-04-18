@@ -3,9 +3,16 @@ import { Injectable } from '@angular/core';
 import { AppModel } from './../models/app.model';
 import { Constants } from '../constants';
 
+import { HistoryService } from './history.service';
+
 @Injectable()
 export class SvgService {
-    constructor(private appModel: AppModel) { }
+    static SVG_TYPE = 'image/svg+xml';
+
+    constructor(
+        private appModel: AppModel,
+        private historyService: HistoryService
+    ) { }
 
     private normalize(data) {
         return <Primitive> {
@@ -115,5 +122,31 @@ export class SvgService {
         element.click();
       
         document.body.removeChild(element);
+    }
+
+    load(file: File) {
+        if (file.type != SvgService.SVG_TYPE) {
+            return false;
+        }
+        let reader = new FileReader()
+        reader.onload = (event) => {
+            if (reader.readyState == 2) {
+                const parser = new DOMParser();
+                const xmlDom = parser.parseFromString(reader.result, SvgService.SVG_TYPE);
+                Array.from(xmlDom.getElementsByTagName('line')).map(o => {
+                    return {
+                        'type': Constants.ID_LINE,
+                        'start': { 'x': o.x1.baseVal.value, 'y': o.y1.baseVal.value },
+                        'end': { 'x': o.x2.baseVal.value, 'y': o.y2.baseVal.value },
+                        'points': []
+                    }
+                }).forEach(o => {
+                    this.appModel.data.push(o); 
+                });
+                this.historyService.snapshoot();
+            }
+        }
+        reader.readAsText(file)
+        return true;
     }
 }

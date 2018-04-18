@@ -16,6 +16,7 @@ export class Constants {
     static ID_GRID = 'grid';
     static ID_MOVE = 'move';
     static ID_SAVE = 'save';
+    static ID_LOAD = 'load';
     static ID_BACK = 'back';
     static ID_NEXT = 'next';
     static ID_ARC = 'arc';
@@ -43,13 +44,17 @@ export class Constants {
         { id: Constants.ID_ARC, name: "Arc", isActive: false },
     ];
     
-    static PAGE_ITEMS = [
-        { id: Constants.ID_PLUS, name: "Zoom In", isActive: false },
-        { id: Constants.ID_MINUS, name: "Zoom Out", isActive: false },
-        { id: Constants.ID_GRID, name: "Grid", isActive: false },
-        { id: Constants.ID_MOVE, name: "Move", isActive: false },
-        { id: Constants.ID_SAVE, name: "Save", isActive: false },
-        { id: Constants.ID_BACK, name: "Back", isActive: false },
-        { id: Constants.ID_NEXT, name: "Next", isActive: false }
-    ];
+    static PAGE_ITEMS = {
+        'plus': { id: Constants.ID_PLUS, name: "Zoom In", isActive: false },
+        'minus': { id: Constants.ID_MINUS, name: "Zoom Out", isActive: false },
+        'grid': { id: Constants.ID_GRID, name: "Grid", isActive: false },
+        'move': { id: Constants.ID_MOVE, name: "Move", isActive: false },
+    };
+
+    static FILE_ITEMS = {
+        'save': { id: Constants.ID_SAVE, name: "Save", isActive: false },
+        'load': { id: Constants.ID_LOAD, name: "Load", isActive: false },
+        'back': { id: Constants.ID_BACK, name: "Back", isActive: false },
+        'next': { id: Constants.ID_NEXT, name: "Next", isActive: false }
+    };
 };
