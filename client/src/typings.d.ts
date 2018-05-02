@@ -32,7 +32,7 @@ interface PrimitivePen extends Primitive {
 }
 
 interface PrimitiveSize extends Primitive {
-    'references': Array<Primitive>;
+    'references': Array<string>;
 }
 
 interface PrimitivePoint {

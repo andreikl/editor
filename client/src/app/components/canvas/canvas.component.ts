@@ -43,7 +43,7 @@ export class CanvasComponent implements OnInit {
         const canvas = this.canvas.nativeElement;
 
         // edit state
-        let draggablePoint;
+        let draggablePoint: PrimitivePoint | undefined;
 
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
             switch (message.data.name) {
@@ -64,10 +64,10 @@ export class CanvasComponent implements OnInit {
             }
         });
 
-        const pointInitiator = (start: Point): Primitive => {
+        const pointInitiator = (start: Point): Primitive | undefined => {
             if (this.draggablePoint) { // editing primitive state
                 draggablePoint = this.draggablePoint;
-                return draggablePoint;
+                return draggablePoint.primitive;
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
                 return {
                     'id': Date.now().toString(),
@@ -79,42 +79,31 @@ export class CanvasComponent implements OnInit {
                 const point = this.utilsService.toNormal({
                     'x': start.x,
                     'y': start.y
-                //}, !isNaN(this.appModel.grid));
                 }, false);
-                if (this.appModel.selectedTool == Constants.ID_ARC) {
-                    this.appModel.selectedPrimitive = <Primitive> {
-                        'id': Date.now().toString(),
-                        'type': this.appModel.selectedTool,
-                        'start': point,
-                        'end': { 'x': point.x, 'y': point.y },
-                        'startAngle': 0,
-                        'endAngle': 2 * Math.PI
-                    }
-                } if (this.appModel.selectedTool == Constants.ID_PEN) {
-                    this.appModel.selectedPrimitive = <Primitive> {
-                        'id': Date.now().toString(),
-                        'type': this.appModel.selectedTool,
-                        'start': point,
-                        'end': { 'x': point.x, 'y': point.y },
-                        'points': []
-                    }
-                } else {
-                    this.appModel.selectedPrimitive = {
-                        'id': Date.now().toString(),
-                        'type': this.appModel.selectedTool,
-                        'start': point,
-                        'end': { 'x': point.x, 'y': point.y }
-                    }
-                }
+                this.appModel.selectedPrimitive = this.utilsService.createPrimitive(this.appModel.selectedTool, point);
                 return this.appModel.selectedPrimitive;
             }
         }
 
-        const pointAccumulator = (x: Primitive, y: Point): Primitive => {
+        const pointAccumulator = (x: Primitive | undefined, y: Point): Primitive | undefined => {
+            if (!x) {
+                return undefined;
+            }
+
             //const point = this.utilsService.toNormal(y, !isNaN(this.appModel.grid));
             const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
-                if (draggablePoint.direction == PointType.StartPoint) { // keep proportion
+                if (draggablePoint.primitive.type == Constants.ID_SIZE) { // size primitive has special logic
+                    const sp = <PrimitiveSize>draggablePoint.primitive;
+                    const prim = (draggablePoint.direction == PointType.StartPoint)?
+                        this.utilsService.findPrimitive(sp.references[0]):
+                        this.utilsService.findPrimitive(sp.references[1]);
+                    if (prim) {
+                        const p = this.utilsService.getClosestPrimitivePoint(prim, point);
+                        draggablePoint.point.x = p.x;
+                        draggablePoint.point.y = p.y;
+                    }
+                } else if (draggablePoint.direction == PointType.StartPoint) { // keep proportion
                     const oldx = draggablePoint.point.x;
                     const oldy = draggablePoint.point.y;
                     draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
@@ -123,10 +112,13 @@ export class CanvasComponent implements OnInit {
                     const deltay = draggablePoint.point.y - oldy;
                     draggablePoint.primitive.end.x += deltax;
                     draggablePoint.primitive.end.y += deltay;
-                    draggablePoint.primitive.points.forEach(o => {
-                        o.x += deltax;
-                        o.y += deltay;
-                    });
+                    if (draggablePoint.primitive.type == Constants.ID_PEN) {
+                        const pp = <PrimitivePen>draggablePoint.primitive;
+                        pp.points.forEach(o => {
+                            o.x += deltax;
+                            o.y += deltay;
+                        });
+                    }
                 } else {
                     draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
                     draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
@@ -204,7 +196,9 @@ export class CanvasComponent implements OnInit {
                                 movingSubscription.unsubscribe();
                                 movingSubscription = undefined;
                                 startPoint = undefined;
-                                return addPrimitive(data)
+                                if (data) {
+                                    addPrimitive(data);
+                                }
                             },
                             e => console.log("moveEvent error", e)
                         );
@@ -248,7 +242,9 @@ export class CanvasComponent implements OnInit {
                                 movingSubscription.unsubscribe();
                                 movingSubscription = undefined;
                                 startPoint = undefined;
-                                return addPrimitive(data)
+                                if (data) {
+                                    addPrimitive(data);
+                                }
                             },
                             e => console.log("touchmoveEvent error", e)
                         );
@@ -346,47 +342,7 @@ export class CanvasComponent implements OnInit {
     }
 
     selectPrimitive(point: Point) {
-        this.appModel.selectedPrimitive = this.appModel.data.find(o => {
-            switch(o.type) {
-                case Constants.ID_LINE:
-                    return this.utilsService.testLine(o.start, o.end, point);
-
-                case Constants.ID_ARC:
-                    //const canvas = this.canvas.nativeElement;
-                    //const context = canvas.getContext("2d");
-                    return this.utilsService.testEllipse(o.start, o.end, point);
-
-                case Constants.ID_RECTANGLE:
-                    return this.utilsService.testLine(o.start, {
-                        'x': o.start.x,
-                        'y': o.end.y
-                    }, point) || this.utilsService.testLine({
-                        'x': o.start.x,
-                        'y': o.end.y
-                    }, o.end, point) || this.utilsService.testLine(o.end, {
-                        'x': o.end.x,
-                        'y': o.start.y
-                    }, point) || this.utilsService.testLine({
-                        'x': o.end.x,
-                        'y': o.start.y
-                    }, o.start, point);
-    
-                case Constants.ID_PEN:
-                    const pen = <PrimitivePen>o;
-                    return pen.points.reduce((x, y) => {
-                        return {
-                            'res': x.res || this.utilsService.testLine(x.point, y, point),
-                            'point': y
-                        }
-                    }, {
-                        'res': false,
-                        'point': o.start
-                    }).res;
-
-                default:
-                    return false;
-            }
-        });
+        this.appModel.selectedPrimitive = this.appModel.data.find(o => this.utilsService.testPrimitive(o, point));
     }
 
     drawScene(data: Primitive | null) {

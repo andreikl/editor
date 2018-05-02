@@ -28,6 +28,10 @@ export class UtilsService {
         }
     }
 
+    findPrimitive(id: string): Primitive | undefined {
+        return this.appModel.data.find(o => o.id == id);
+    }
+
     dotProduction(x: Point, y: Point) {
         return x.x * y.x + x.y * y.y;
     }
@@ -77,19 +81,14 @@ export class UtilsService {
     }
 
     testLine(a: Point, b: Point, point: Point, context?: any) {
-        //console.log('a: ', a);
-        //console.log('b: ', b);
-        //console.log('point: ', point);
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
         }
-
         const ac = {
             'x': point.x - a.x,
             'y': point.y - a.y,
         }
-
         const bc = {
             'x': point.x - b.x,
             'y': point.y - b.y,
@@ -106,34 +105,86 @@ export class UtilsService {
                 dist = this.dotProduction(ac, ac) - e * e / f;
             }
         }
-
-        if (context) {
-            // closest point implementation
-            // project point into ab, computing parametrized position d(t) = a + t * (b - a)
-            let t = this.dotProduction(ac, ab) / this.dotProduction(ab, ab);
-
-            // if point outside ab, attach t to the closest endpoint
-            if (t < 0.0) t = 0.0;
-            if (t > 1.0) t = 1.0;
-
-            // compute the closest point on ab
-            let d = {
-                'x': ab.x * t + a.x,
-                'y': ab.y * t + a.y
-            }
-
-            point = this.fromNormal(point);
-            d = this.fromNormal(d);
-   
-            //draw projection line
-            context.beginPath();
-            context.moveTo(point.x, point.y);
-            context.lineTo(d.x, d.y);
-            context.stroke();
-        }
-
         const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
         return (dist < screenDist * screenDist)? true: false;
+    }
+
+    testPrimitive(prim: Primitive, point: Point): boolean {
+        switch(prim.type) {
+            case Constants.ID_LINE:
+            case Constants.ID_SIZE:
+                return this.testLine(prim.start, prim.end, point);
+
+            case Constants.ID_ARC:
+                //const canvas = this.canvas.nativeElement;
+                //const context = canvas.getContext("2d");
+                return this.testEllipse(prim.start, prim.end, point);
+
+            case Constants.ID_RECTANGLE:
+                return this.testLine(prim.start, {
+                    'x': prim.start.x,
+                    'y': prim.end.y
+                }, point) || this.testLine({
+                    'x': prim.start.x,
+                    'y': prim.end.y
+                }, prim.end, point) || this.testLine(prim.end, {
+                    'x': prim.end.x,
+                    'y': prim.start.y
+                }, point) || this.testLine({
+                    'x': prim.end.x,
+                    'y': prim.start.y
+                }, prim.start, point);
+
+            case Constants.ID_PEN:
+                const pen = <PrimitivePen>prim;
+                return pen.points.reduce((x, y) => {
+                    return {
+                        'res': x.res || this.testLine(x.point, y, point),
+                        'point': y
+                    }
+                }, {
+                    'res': false,
+                    'point': prim.start
+                }).res;
+
+            default:
+                return false;
+        };
+    }
+
+    closestLinePoint(a: Point, b: Point, point: Point) {
+        const ab = {
+            'x': b.x - a.x,
+            'y': b.y - a.y,
+        }
+        const ac = {
+            'x': point.x - a.x,
+            'y': point.y - a.y,
+        }
+        const bc = {
+            'x': point.x - b.x,
+            'y': point.y - b.y,
+        }
+        // project point into ab, computing parametrized position d(t) = a + t * (b - a)
+        let t = this.dotProduction(ac, ab) / this.dotProduction(ab, ab);
+
+        // if point outside ab, attach t to the closest endpoint
+        if (t < 0.0) t = 0.0;
+        if (t > 1.0) t = 1.0;
+
+        // compute the closest point on ab
+        return {
+            'x': ab.x * t + a.x,
+            'y': ab.y * t + a.y
+        }
+    }
+
+    getClosestPrimitivePoint(prim: Primitive, p: Point): Point {
+        switch (prim.type) {
+            case Constants.ID_LINE:
+                return this.closestLinePoint(prim.start, prim.end, p);
+        }
+        return p;
     }
 
     getPrimitivePoint(o: Primitive, sp: Point) {
@@ -192,5 +243,40 @@ export class UtilsService {
             'x': px - rect.left,
             'y': py - rect.top
         };
+    }
+
+    createPrimitive(type: string, point: Point): Primitive | undefined {
+        switch (type) {
+            case Constants.ID_ARC:
+                return <Primitive> {
+                    'id': Date.now().toString(),
+                    'type': this.appModel.selectedTool,
+                    'start': point,
+                    'end': { 'x': point.x, 'y': point.y },
+                    'startAngle': 0,
+                    'endAngle': 2 * Math.PI
+                };
+
+            case Constants.ID_PEN:
+                return <Primitive> {
+                    'id': Date.now().toString(),
+                    'type': this.appModel.selectedTool,
+                    'start': point,
+                    'end': { 'x': point.x, 'y': point.y },
+                    'points': []
+                };
+            case Constants.ID_LINE:
+            case Constants.ID_RECTANGLE:
+                return {
+                    'id': Date.now().toString(),
+                    'type': this.appModel.selectedTool,
+                    'start': point,
+                    'end': { 'x': point.x, 'y': point.y }
+                }
+
+            default:
+                return undefined;
+
+        }
     }
 }
