@@ -94,13 +94,28 @@ export class CanvasComponent implements OnInit {
             if (draggablePoint) { // editing primitive state
                 if (draggablePoint.primitive.type == Constants.ID_SIZE) { // size primitive has special logic
                     const sp = <PrimitiveSize>draggablePoint.primitive;
-                    const prim = (draggablePoint.direction == PointType.StartPoint)?
-                        this.utilsService.findPrimitive(sp.references[0]):
-                        this.utilsService.findPrimitive(sp.references[1]);
-                    if (prim) {
-                        const p = this.utilsService.getClosestPrimitivePoint(prim, point);
-                        draggablePoint.point.x = p.x;
-                        draggablePoint.point.y = p.y;
+                    if (draggablePoint.direction == PointType.StartPoint) {
+                        const firstPrim = this.utilsService.findPrimitive(sp.references[0]);
+                        const secondPrim = this.utilsService.findPrimitive(sp.references[1]);
+                        if (firstPrim && secondPrim) {
+                            const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
+                            const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
+                            draggablePoint.point.x = p.x;
+                            draggablePoint.point.y = p.y;
+                            draggablePoint.primitive.end.x = x;
+                            draggablePoint.primitive.end.y = p.y;
+                        }
+                    } else {
+                        const firstPrim = this.utilsService.findPrimitive(sp.references[1]);
+                        const secondPrim = this.utilsService.findPrimitive(sp.references[0]);
+                        if (firstPrim && secondPrim) {
+                            const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
+                            const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
+                            draggablePoint.point.x = p.x;
+                            draggablePoint.point.y = p.y;
+                            draggablePoint.primitive.start.x = x;
+                            draggablePoint.primitive.start.y = p.y;
+                        }
                     }
                 } else if (draggablePoint.direction == PointType.StartPoint) { // keep proportion
                     const oldx = draggablePoint.point.x;

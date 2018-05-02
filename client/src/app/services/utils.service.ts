@@ -32,6 +32,16 @@ export class UtilsService {
         return this.appModel.data.find(o => o.id == id);
     }
 
+    getXofLine(a: Point, b: Point, y: number) {
+        //(x2-x1)*(y-y1)=(y2-y1)*(x-x1)
+        //ab.x*(y-y1)/ab.y+x1=x
+        const ab = {
+            'x': b.x - a.x,
+            'y': b.y - a.y,
+        }
+        return ab.x * (y - a.y) / ab.y + a.x;
+    }
+
     // check if elipse close enough to point
     testEllipse(a: Point, b: Point, point: Point, context?: any) {
         // the biggest radius
