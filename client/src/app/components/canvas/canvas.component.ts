@@ -278,8 +278,20 @@ export class CanvasComponent implements OnInit {
                 if (this.appModel.selectedTool == Constants.ID_SIZE) {
                     if (!firstPrimitive) {
                         firstPrimitive = this.appModel.selectedPrimitive;
-                    } else {
-                        console.log("do size: first, second", firstPrimitive, this.appModel.selectedPrimitive);
+                    } else if (this.appModel.selectedPrimitive) {
+                        this.appModel.selectedPrimitive = <Primitive> {
+                            'id': Date.now().toString(),
+                            'type': this.appModel.selectedTool,
+                            'start': this.utilsService.clone(firstPrimitive.start, false),
+                            'end': this.utilsService.clone(this.appModel.selectedPrimitive.end, false),
+                            'references': [
+                                firstPrimitive.id,
+                                this.appModel.selectedPrimitive.id
+                            ]
+                        }
+                        this.appModel.data.push(this.appModel.selectedPrimitive);
+                        this.historyService.snapshoot();
+
                         firstPrimitive = undefined;
                     }
                 } else {
