@@ -130,13 +130,16 @@ export class DrawService {
             context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
             context.stroke();
 
-            this.appModel.selectedPrimitive.points.forEach((o, index) => {
-                const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
-                const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
-                context.beginPath();
-                context.arc(x, y, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
-                context.stroke();
-            });
+            if (this.appModel.selectedPrimitive.id == Constants.ID_PEN) {
+                const pen = <PrimitivePen>this.appModel.selectedPrimitive;
+                pen.points.forEach((o, index) => {
+                    const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
+                    const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
+                    context.beginPath();
+                    context.arc(x, y, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
+                    context.stroke();
+                });
+            }
         }
     }
 

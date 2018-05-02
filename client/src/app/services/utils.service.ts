@@ -152,8 +152,9 @@ export class UtilsService {
                 'direction': PointType.EndPoint,
                 'primitive': this.appModel.selectedPrimitive
             };
-        } else {
-            return o.points.filter(point => {
+        } else if (o.type == Constants.ID_PEN) {
+            const pen = <PrimitivePen>o;
+            return pen.points.filter(point => {
                 const p = this.fromNormal(point);
                 return sp.x >= p.x - sc && sp.x <= p.x + sc && sp.y >= p.y - sc && sp.y <= p.y + sc;
             }).map(point => <PrimitivePoint> {

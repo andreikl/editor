@@ -28,6 +28,7 @@ export class AppComponent implements OnInit {
         iconRegistry.addSvgIcon(Constants.ID_RECTANGLE, sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
         iconRegistry.addSvgIcon(Constants.ID_PEN, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
         iconRegistry.addSvgIcon(Constants.ID_ARC, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
+        iconRegistry.addSvgIcon(Constants.ID_SIZE, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
         iconRegistry.addSvgIcon(Constants.ID_GRID, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
         iconRegistry.addSvgIcon(Constants.ID_PLUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
         iconRegistry.addSvgIcon(Constants.ID_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));

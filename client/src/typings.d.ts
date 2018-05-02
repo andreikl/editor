@@ -16,15 +16,23 @@ interface Point {
 }
 
 interface Primitive {
+    'id': string;
     'type': string;
     'start': Point;
     'end': Point;
-    'points': Array<Point>;
 }
 
 interface PrimitiveArc extends Primitive {
     'startAngle': number;
     'endAngle': number;
+}
+
+interface PrimitivePen extends Primitive {
+    'points': Array<Point>;
+}
+
+interface PrimitiveSize extends Primitive {
+    'references': Array<Primitive>;
 }
 
 interface PrimitivePoint {

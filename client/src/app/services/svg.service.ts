@@ -76,15 +76,16 @@ export class SvgService {
         return this.appModel.data.map(o => {
             switch (o.type) {
                 case Constants.ID_LINE:
-                    return '<line x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    return '<line id="' + o.id + '" x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_RECTANGLE:
                     o = this.normalize(o);
-                    return '<rect x="' + o.start.x + '" y="' + o.start.y + '" width="' + (o.end.x - o.start.x) + '" height="' + (o.end.y - o.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                    return '<rect id="' + o.id + '" x="' + o.start.x + '" y="' + o.start.y + '" width="' + (o.end.x - o.start.x) + '" height="' + (o.end.y - o.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_PEN:
-                    return '<polyline points="' + o.start.x + ',' + o.start.y + ' '
-                        + o.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
+                    const pen = <PrimitivePen>o;
+                    return '<polyline id="' + o.id + '" points="' + pen.start.x + ',' + pen.start.y + ' '
+                        + pen.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
                         + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 case Constants.ID_ARC:
@@ -97,9 +98,9 @@ export class SvgService {
                     const endy = ry * Math.sin(dataArc.endAngle);
 
                     if (startx == endx && starty == endy)
-                        return '<path d="M' + (o.start.x + startx) + ',' + (o.start.y + starty) + ' A' + rx + ',' + ry + ' 0 0,1 ' + (o.start.x + endx) + ',' + (o.start.y + endy) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                        return '<path id="' + o.id + '" d="M' + (o.start.x + startx) + ',' + (o.start.y + starty) + ' A' + rx + ',' + ry + ' 0 0,1 ' + (o.start.x + endx) + ',' + (o.start.y + endy) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
                     else
-                        return '<ellipse cx="' + o.start.x + '" cy="' + o.start.y + '" rx="' + rx + '" ry="' + ry + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                        return '<ellipse id="' + o.id + '" cx="' + o.start.x + '" cy="' + o.start.y + '" rx="' + rx + '" ry="' + ry + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
                 default:
                     return '';
@@ -135,6 +136,7 @@ export class SvgService {
                 const xmlDom = parser.parseFromString(reader.result, SvgService.SVG_TYPE);
                 Array.from(xmlDom.getElementsByTagName('line')).map(o => {
                     return {
+                        'id': o.id,
                         'type': Constants.ID_LINE,
                         'start': { 'x': o.x1.baseVal.value, 'y': o.y1.baseVal.value },
                         'end': { 'x': o.x2.baseVal.value, 'y': o.y2.baseVal.value },

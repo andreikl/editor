@@ -29,6 +29,7 @@ export class CanvasComponent implements OnInit {
     @ViewChild('canvas')
     canvas: ElementRef;
 
+    // edit state
     draggablePoint?: PrimitivePoint;
 
     constructor(private appModel: AppModel,
@@ -41,6 +42,7 @@ export class CanvasComponent implements OnInit {
     ngOnInit() {
         const canvas = this.canvas.nativeElement;
 
+        // edit state
         let draggablePoint;
 
         this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
@@ -68,10 +70,10 @@ export class CanvasComponent implements OnInit {
                 return draggablePoint;
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
                 return {
+                    'id': Date.now().toString(),
                     'type': this.appModel.selectedTool,
                     'start': { 'x': start.x, 'y': start.y },
-                    'end': { 'x': start.x, 'y': start.y },
-                    'points': []
+                    'end': { 'x': start.x, 'y': start.y }
                 }
             } else { // creating primitive state
                 const point = this.utilsService.toNormal({
@@ -81,19 +83,27 @@ export class CanvasComponent implements OnInit {
                 }, false);
                 if (this.appModel.selectedTool == Constants.ID_ARC) {
                     this.appModel.selectedPrimitive = <Primitive> {
+                        'id': Date.now().toString(),
                         'type': this.appModel.selectedTool,
                         'start': point,
                         'end': { 'x': point.x, 'y': point.y },
-                        'points': [],
                         'startAngle': 0,
                         'endAngle': 2 * Math.PI
                     }
-                } else {
-                    this.appModel.selectedPrimitive = {
+                } if (this.appModel.selectedTool == Constants.ID_PEN) {
+                    this.appModel.selectedPrimitive = <Primitive> {
+                        'id': Date.now().toString(),
                         'type': this.appModel.selectedTool,
                         'start': point,
                         'end': { 'x': point.x, 'y': point.y },
                         'points': []
+                    }
+                } else {
+                    this.appModel.selectedPrimitive = {
+                        'id': Date.now().toString(),
+                        'type': this.appModel.selectedTool,
+                        'start': point,
+                        'end': { 'x': point.x, 'y': point.y }
                     }
                 }
                 return this.appModel.selectedPrimitive;
@@ -134,11 +144,12 @@ export class CanvasComponent implements OnInit {
                 x.end.x = y.x = point.x;
                 x.end.y = y.y = point.y;
                 if (this.appModel.selectedTool == Constants.ID_PEN) {
-                    const lastIndex = x.points.length - 1;
-                    if (lastIndex >= 0 && (x.points[lastIndex].x != y.x || x.points[lastIndex].y != y.y)) {
-                        x.points.push(y);
-                    } else if (x.points.length == 0) {
-                        x.points.push(y);
+                    const pen = <PrimitivePen>x;
+                    const lastIndex = pen.points.length - 1;
+                    if (lastIndex >= 0 && (pen.points[lastIndex].x != y.x || pen.points[lastIndex].y != y.y)) {
+                        pen.points.push(y);
+                    } else if (pen.points.length == 0) {
+                        pen.points.push(y);
                     }
                 }
                 this.drawScene(x);
@@ -150,7 +161,11 @@ export class CanvasComponent implements OnInit {
             if (draggablePoint) {
                 draggablePoint = undefined;
                 this.historyService.snapshoot();
-            } else if (data.type != Constants.ID_MOVE) {
+            } else if (data.type == Constants.ID_LINE ||
+                data.type == Constants.ID_RECTANGLE ||
+                data.type == Constants.ID_PEN ||
+                data.type == Constants.ID_ARC) {
+
                 data.start.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.x / this.appModel.grid): data.start.x;
                 data.start.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.y / this.appModel.grid): data.start.y;
                 data.end.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
@@ -168,7 +183,7 @@ export class CanvasComponent implements OnInit {
                 return false;
         }
 
-        // mouse and touch moving ----------
+        // handle moving to add, edit primitive and etc, it isn't click--------
         let movingSubscription; // true if moving event need to be subscribed
         let startPoint; // undefined if right mousedown event need to be stored
         Observable.fromEvent(canvas, 'mousemove')
@@ -215,7 +230,7 @@ export class CanvasComponent implements OnInit {
                         this.draggablePoint = o;
                     }
                 },
-                e => console.log("wheelEvent error", e)
+                e => console.log("moveEvent error", e)
             );
 
         Observable.fromEvent(canvas, 'touchmove')
@@ -250,9 +265,28 @@ export class CanvasComponent implements OnInit {
                 o => this.draggablePoint = o,
                 e => console.log("wheelEvent error", e)
             );
+        // ---------------------------
 
-        // end of mouse and touch moving
-        // mouse and touch clicking ----------
+        // handle clicks to select primitive, it isn't moving--------
+        let firstPrimitive;
+        const selectionFinished = (start: Point, end: Point) => {
+            if (isSelectionOrMoving(start, end)) {
+                this.selectPrimitive(this.utilsService.toNormal({
+                    'x': start.x + (end.x - start.x) / 2,
+                    'y': start.y + (end.y - start.y) / 2,
+                }));
+                if (this.appModel.selectedTool == Constants.ID_SIZE) {
+                    if (!firstPrimitive) {
+                        firstPrimitive = this.appModel.selectedPrimitive;
+                    } else {
+                        console.log("do size: first, second", firstPrimitive, this.appModel.selectedPrimitive);
+                        firstPrimitive = undefined;
+                    }
+                } else {
+                    firstPrimitive = undefined;
+                }
+            }
+        };
         Observable.fromEvent(canvas, 'mousedown')
             .map((event: MouseEvent) => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
             .subscribe((start: Point) => {
@@ -260,12 +294,7 @@ export class CanvasComponent implements OnInit {
                     .map((event: MouseEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
                     .subscribe((end: Point) => {
                         subscription.unsubscribe();
-                        if (isSelectionOrMoving(start, end)) {
-                            this.selectPrimitive(this.utilsService.toNormal({
-                                'x': start.x + (end.x - start.x) / 2,
-                                'y': start.y + (end.y - start.y) / 2,
-                            }));
-                        }
+                        selectionFinished(start, end);
                     }, e => console.log("mouseupEvent error", e));
             }, e => console.log("mousedownEvent error", e));
         Observable.fromEvent(canvas, 'touchstart')
@@ -275,16 +304,12 @@ export class CanvasComponent implements OnInit {
                     .map((endEvent: TouchEvent) => this.utilsService.toNormal(this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), endEvent.changedTouches[0].pageX, endEvent.changedTouches[0].pageY)))
                     .subscribe((end: Point) => {
                         subscription.unsubscribe();
-                        if (isSelectionOrMoving(start, end)) {
-                            this.selectPrimitive(this.utilsService.toNormal({
-                                'x': start.x + (end.x - start.x) / 2,
-                                'y': start.y + (end.y - start.y) / 2,
-                            }));
-                        };
+                        selectionFinished(start, end);
                     }, e => console.log("touchstopEvent error", e));
             }, e => console.log("touchstartEvent error", e));
-        // end of mouse and touch clicking
+        // --------------------------
 
+        // zoom ---------------------
         Observable.fromEvent(canvas, 'wheel').subscribe(
             (wheelEvent: WheelEvent) => {
                 wheelEvent.preventDefault();
@@ -293,6 +318,7 @@ export class CanvasComponent implements OnInit {
             },
             e => console.log("wheelEvent error", e)
         );
+        // --------------------------
     }
 
     resizeCanvas() {
@@ -334,7 +360,8 @@ export class CanvasComponent implements OnInit {
                     }, o.start, point);
     
                 case Constants.ID_PEN:
-                    return o.points.reduce((x, y) => {
+                    const pen = <PrimitivePen>o;
+                    return pen.points.reduce((x, y) => {
                         return {
                             'res': x.res || this.utilsService.testLine(x.point, y, point),
                             'point': y
