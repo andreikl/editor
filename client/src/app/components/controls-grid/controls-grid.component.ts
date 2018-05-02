@@ -17,7 +17,7 @@ import { Constants } from '../../constants';
 export class ControlsGridComponent implements OnInit {
     @Input() items: ControlItem[];
 
-    active: ControlItem;
+    active: ControlItem | undefined;
 
     constructor(private messageService: MessageService,
         private historyService: HistoryService,
@@ -25,7 +25,13 @@ export class ControlsGridComponent implements OnInit {
         private appModel: AppModel) {
     }
 
-    ngOnInit() { }
+    ngOnInit() {
+        this.messageService.subscribe(Constants.EVENT_MODEL_CHANGED, (message) => {
+            if (message.data.name == Constants.EVENT_SELECTED_TOOL && !this.appModel.selectedTool) {
+                this.active = undefined;
+            }
+        });
+     }
 
     clickHandler($event: Event, item: ControlItem) {
         this.active = item;

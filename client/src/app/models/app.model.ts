@@ -33,7 +33,7 @@ export class AppModel extends BaseModel {
         y: -1
     };
     public selectedPrimitive?: Primitive;
-    public selectedTool: string = Constants.ID_LINE;
+    public selectedTool: string | undefined;
 
     public history: Primitive[][] = [[]];
     public data: Array<Primitive> = [];

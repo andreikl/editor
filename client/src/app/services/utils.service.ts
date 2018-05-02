@@ -7,7 +7,6 @@ import { AppModel } from '../models/app.model';
 
 @Injectable()
 export class UtilsService {
-
     constructor(private appModel: AppModel) { }
 
     toNormal(point: Point, isGrid?: Boolean): Point {
@@ -28,14 +27,12 @@ export class UtilsService {
         }
     }
 
+    // get primitive from scene by id
     findPrimitive(id: string): Primitive | undefined {
         return this.appModel.data.find(o => o.id == id);
     }
 
-    dotProduction(x: Point, y: Point) {
-        return x.x * y.x + x.y * y.y;
-    }
-
+    // check if elipse close enough to point
     testEllipse(a: Point, b: Point, point: Point, context?: any) {
         // the biggest radius
         const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
@@ -80,6 +77,7 @@ export class UtilsService {
         return (dist < screenDist* screenDist)? true: false;
     }
 
+    // check if line close enough to point
     testLine(a: Point, b: Point, point: Point, context?: any) {
         const ab = {
             'x': b.x - a.x,
@@ -109,6 +107,7 @@ export class UtilsService {
         return (dist < screenDist * screenDist)? true: false;
     }
 
+    // check if edge of primitive close enough to point
     testPrimitive(prim: Primitive, point: Point): boolean {
         switch(prim.type) {
             case Constants.ID_LINE:
@@ -152,6 +151,7 @@ export class UtilsService {
         };
     }
 
+    // get closest point to line
     closestLinePoint(a: Point, b: Point, point: Point) {
         const ab = {
             'x': b.x - a.x,
@@ -179,6 +179,7 @@ export class UtilsService {
         }
     }
 
+    // get closest point to primitive
     getClosestPrimitivePoint(prim: Primitive, p: Point): Point {
         switch (prim.type) {
             case Constants.ID_LINE:
@@ -187,6 +188,7 @@ export class UtilsService {
         return p;
     }
 
+    // return point of primitive
     getPrimitivePoint(o: Primitive, sp: Point) {
         const sc = Constants.SELECTION_CIRCLE;
         const p1 = this.fromNormal(o.start);
@@ -216,6 +218,7 @@ export class UtilsService {
         }
     }
 
+    // clone object
     clone(object: any, isDeep: Boolean): any {
         let o = {};
         Object.keys(object).forEach(el => {
@@ -232,25 +235,21 @@ export class UtilsService {
         return o;
     }
 
-    defer(f, context) {
-        setTimeout(() => {
-            f.call(context);
-        }, 5000);
-    }
-
-    getScreenPoint(rect, px, py) {
+    // translate to canvas rect
+    getScreenPoint(rect, px, py): Point {
         return {
             'x': px - rect.left,
             'y': py - rect.top
         };
     }
 
-    createPrimitive(type: string, point: Point): Primitive | undefined {
+    //Factory to create primitives
+    createPrimitive(type: string | undefined, point: Point): Primitive | undefined {
         switch (type) {
             case Constants.ID_ARC:
                 return <Primitive> {
                     'id': Date.now().toString(),
-                    'type': this.appModel.selectedTool,
+                    'type': type,
                     'start': point,
                     'end': { 'x': point.x, 'y': point.y },
                     'startAngle': 0,
@@ -260,16 +259,16 @@ export class UtilsService {
             case Constants.ID_PEN:
                 return <Primitive> {
                     'id': Date.now().toString(),
-                    'type': this.appModel.selectedTool,
+                    'type': type,
                     'start': point,
                     'end': { 'x': point.x, 'y': point.y },
                     'points': []
                 };
             case Constants.ID_LINE:
             case Constants.ID_RECTANGLE:
-                return {
+                return <Primitive> {
                     'id': Date.now().toString(),
-                    'type': this.appModel.selectedTool,
+                    'type': type,
                     'start': point,
                     'end': { 'x': point.x, 'y': point.y }
                 }
@@ -278,5 +277,9 @@ export class UtilsService {
                 return undefined;
 
         }
+    }
+
+    private dotProduction(x: Point, y: Point) {
+        return x.x * y.x + x.y * y.y;
     }
 }

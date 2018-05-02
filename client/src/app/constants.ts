@@ -7,6 +7,7 @@ export class Constants {
     static EVENT_SIZE = 'size';
     static EVENT_GRID = 'grid';
     static EVENT_SELECTED_PRIMITIVE = 'selectedPrimitive';
+    static EVENT_SELECTED_TOOL = 'selectedTool';
 
     static ID_LINE = 'line';
     static ID_RECTANGLE = 'rectangle';
