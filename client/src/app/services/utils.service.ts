@@ -27,11 +27,6 @@ export class UtilsService {
         }
     }
 
-    // get primitive from scene by id
-    findPrimitive(id: string): Primitive | undefined {
-        return this.appModel.data.find(o => o.id == id);
-    }
-
     getXofLine(a: Point, b: Point, y: number) {
         //(x2-x1)*(y-y1)=(y2-y1)*(x-x1)
         //ab.x*(y-y1)/ab.y+x1=x
@@ -230,19 +225,25 @@ export class UtilsService {
 
     // clone object
     clone(object: any, isDeep: Boolean): any {
-        let o = {};
-        Object.keys(object).forEach(el => {
-            if (isDeep && typeof(object[el]) == 'object') {
-                if (Array.isArray(object[el])) {
-                    o[el] = object[el].map(arrel => this.clone(arrel, true));
-                } else {
-                    o[el] = this.clone(object[el], true);
-                }
+        if (typeof(object) == 'object') {
+            if (Array.isArray(object)) {
+                return object.map(o => this.clone(o, isDeep));
+            } else if (object instanceof Map) {
+                var mobj = new Map;
+                Array.from(object.entries()).forEach(o => {
+                    mobj.set(o[0], this.clone(o[1], isDeep))
+                });
+                return mobj;
             } else {
-                o[el] = object[el];
+                var oobj = {};
+                Object.keys(object).forEach(o => {
+                    oobj[o] = this.clone(object[o], isDeep);
+                });
+                return oobj;
             }
-        });
-        return o;
+        } else {
+            return object;
+        }
     }
 
     // translate to canvas rect

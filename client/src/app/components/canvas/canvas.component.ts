@@ -95,8 +95,8 @@ export class CanvasComponent implements OnInit {
                 if (draggablePoint.primitive.type == Constants.ID_SIZE) { // size primitive has special logic
                     const sp = <PrimitiveSize>draggablePoint.primitive;
                     if (draggablePoint.direction == PointType.StartPoint) {
-                        const firstPrim = this.utilsService.findPrimitive(sp.references[0]);
-                        const secondPrim = this.utilsService.findPrimitive(sp.references[1]);
+                        const firstPrim = this.appModel.data.get(sp.references[0]);
+                        const secondPrim = this.appModel.data.get(sp.references[1]);
                         if (firstPrim && secondPrim) {
                             const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
                             const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
@@ -106,8 +106,8 @@ export class CanvasComponent implements OnInit {
                             draggablePoint.primitive.end.y = p.y;
                         }
                     } else {
-                        const firstPrim = this.utilsService.findPrimitive(sp.references[1]);
-                        const secondPrim = this.utilsService.findPrimitive(sp.references[0]);
+                        const firstPrim = this.appModel.data.get(sp.references[1]);
+                        const secondPrim = this.appModel.data.get(sp.references[0]);
                         if (firstPrim && secondPrim) {
                             const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
                             const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
@@ -177,7 +177,7 @@ export class CanvasComponent implements OnInit {
                 data.end.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
                 data.end.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.y / this.appModel.grid): data.end.y;
     
-                this.appModel.data.push(data);
+                this.appModel.data.set(data.id, data);
                 this.historyService.snapshoot();
 
                 // clear creation state
@@ -288,7 +288,7 @@ export class CanvasComponent implements OnInit {
                                 this.appModel.selectedPrimitive.id
                             ]
                         }
-                        this.appModel.data.push(this.appModel.selectedPrimitive);
+                        this.appModel.data.set(this.appModel.selectedPrimitive.id, this.appModel.selectedPrimitive);
                         this.historyService.snapshoot();
 
                         // clear creation state
@@ -346,7 +346,7 @@ export class CanvasComponent implements OnInit {
     }
 
     selectPrimitive(point: Point) {
-        this.appModel.selectedPrimitive = this.appModel.data.find(o => this.utilsService.testPrimitive(o, point));
+        this.appModel.selectedPrimitive = Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
     }
 
     drawScene(data: Primitive | null) {

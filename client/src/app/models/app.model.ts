@@ -35,9 +35,9 @@ export class AppModel extends BaseModel {
     public selectedPrimitive?: Primitive;
     public selectedTool: string | undefined;
 
-    public history: Primitive[][] = [[]];
-    public data: Array<Primitive> = [];
-    
+    public history: Map<string, Primitive>[] = [];
+    public data = new Map<string, Primitive>();
+
 
     constructor(protected messageService: MessageService) {
         super();

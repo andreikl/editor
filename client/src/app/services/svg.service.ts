@@ -44,7 +44,7 @@ export class SvgService {
             return o.end;
         }
 
-        const r = this.appModel.data.reduce((x, y) => {
+        const r = Array.from(this.appModel.data.values()).reduce((x, y) => {
             const ys = getStart(y);
             const ye = getEnd(y);
             const rect = <Primitive> {
@@ -73,7 +73,7 @@ export class SvgService {
     }
 
     private getBody() {
-        return this.appModel.data.map(o => {
+        return Array.from(this.appModel.data.values()).map(o => {
             switch (o.type) {
                 case Constants.ID_LINE:
                     return '<line id="' + o.id + '" x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
@@ -132,6 +132,7 @@ export class SvgService {
         let reader = new FileReader()
         reader.onload = (event) => {
             if (reader.readyState == 2) {
+                this.appModel.data.clear();
                 const parser = new DOMParser();
                 const xmlDom = parser.parseFromString(reader.result, SvgService.SVG_TYPE);
                 Array.from(xmlDom.getElementsByTagName('line')).map(o => {
@@ -143,7 +144,7 @@ export class SvgService {
                         'points': []
                     }
                 }).forEach(o => {
-                    this.appModel.data.push(o); 
+                    this.appModel.data.set(o.id, o); 
                 });
                 this.historyService.snapshoot();
             }
