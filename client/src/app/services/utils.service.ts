@@ -258,7 +258,7 @@ export class UtilsService {
     createPrimitive(type: string | undefined, point: Point): Primitive | undefined {
         switch (type) {
             case Constants.ID_ARC:
-                return <Primitive> {
+                return <PrimitiveArc> {
                     'id': Date.now().toString(),
                     'type': type,
                     'start': point,
@@ -268,12 +268,12 @@ export class UtilsService {
                 };
 
             case Constants.ID_PEN:
-                return <Primitive> {
+                return <PrimitivePen> {
                     'id': Date.now().toString(),
                     'type': type,
                     'start': point,
                     'end': { 'x': point.x, 'y': point.y },
-                    'points': []
+                    'points': new Array<Point>()
                 };
             case Constants.ID_LINE:
             case Constants.ID_RECTANGLE:

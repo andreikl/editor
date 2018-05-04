@@ -136,12 +136,11 @@ export class SvgService {
                 const parser = new DOMParser();
                 const xmlDom = parser.parseFromString(reader.result, SvgService.SVG_TYPE);
                 Array.from(xmlDom.getElementsByTagName('line')).map(o => {
-                    return {
+                    return <Primitive> {
                         'id': o.id,
                         'type': Constants.ID_LINE,
                         'start': { 'x': o.x1.baseVal.value, 'y': o.y1.baseVal.value },
-                        'end': { 'x': o.x2.baseVal.value, 'y': o.y2.baseVal.value },
-                        'points': []
+                        'end': { 'x': o.x2.baseVal.value, 'y': o.y2.baseVal.value }
                     }
                 }).forEach(o => {
                     this.appModel.data.set(o.id, o); 

@@ -69,7 +69,7 @@ export class CanvasComponent implements OnInit {
                 draggablePoint = this.draggablePoint;
                 return draggablePoint.primitive;
             } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
-                return {
+                return <Primitive> {
                     'id': Date.now().toString(),
                     'type': this.appModel.selectedTool,
                     'start': { 'x': start.x, 'y': start.y },
@@ -95,8 +95,8 @@ export class CanvasComponent implements OnInit {
                 if (draggablePoint.primitive.type == Constants.ID_SIZE) { // size primitive has special logic
                     const sp = <PrimitiveSize>draggablePoint.primitive;
                     if (draggablePoint.direction == PointType.StartPoint) {
-                        const firstPrim = this.appModel.data.get(sp.references[0]);
-                        const secondPrim = this.appModel.data.get(sp.references[1]);
+                        const firstPrim = this.appModel.data.get(sp.ref1);
+                        const secondPrim = this.appModel.data.get(sp.ref2);
                         if (firstPrim && secondPrim) {
                             const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
                             const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
@@ -106,8 +106,8 @@ export class CanvasComponent implements OnInit {
                             draggablePoint.primitive.end.y = p.y;
                         }
                     } else {
-                        const firstPrim = this.appModel.data.get(sp.references[1]);
-                        const secondPrim = this.appModel.data.get(sp.references[0]);
+                        const firstPrim = this.appModel.data.get(sp.ref1);
+                        const secondPrim = this.appModel.data.get(sp.ref2);
                         if (firstPrim && secondPrim) {
                             const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
                             const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
@@ -278,16 +278,24 @@ export class CanvasComponent implements OnInit {
                     if (!firstPrimitive) {
                         firstPrimitive = this.appModel.selectedPrimitive;
                     } else if (this.appModel.selectedPrimitive) {
-                        this.appModel.selectedPrimitive = <Primitive> {
+                        const primSize = <PrimitiveSize> {
                             'id': Date.now().toString(),
                             'type': this.appModel.selectedTool,
                             'start': this.utilsService.clone(firstPrimitive.start, false),
                             'end': this.utilsService.clone(this.appModel.selectedPrimitive.end, false),
-                            'references': [
-                                firstPrimitive.id,
-                                this.appModel.selectedPrimitive.id
-                            ]
+                            'ref1': firstPrimitive.id,
+                            'ref2': this.appModel.selectedPrimitive.id
                         }
+                        if (!firstPrimitive.references) {
+                            firstPrimitive.references = new Array<string>();
+                        }
+                        firstPrimitive.references.push(primSize.id);
+                        if (!this.appModel.selectedPrimitive.references) {
+                            this.appModel.selectedPrimitive.references = new Array<string>();
+                        }
+                        this.appModel.selectedPrimitive.references.push(primSize.id);
+
+                        this.appModel.selectedPrimitive = primSize;
                         this.appModel.data.set(this.appModel.selectedPrimitive.id, this.appModel.selectedPrimitive);
                         this.historyService.snapshoot();
 

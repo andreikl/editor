@@ -20,6 +20,7 @@ interface Primitive {
     'type': string;
     'start': Point;
     'end': Point;
+    'references': Array<string> | undefined;
 }
 
 interface PrimitiveArc extends Primitive {
@@ -32,7 +33,8 @@ interface PrimitivePen extends Primitive {
 }
 
 interface PrimitiveSize extends Primitive {
-    'references': Array<string>;
+    'ref1': string;
+    'ref2': string;
 }
 
 interface PrimitivePoint {

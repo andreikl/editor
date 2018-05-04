@@ -38,7 +38,6 @@ export class AppModel extends BaseModel {
     public history: Map<string, Primitive>[] = [];
     public data = new Map<string, Primitive>();
 
-
     constructor(protected messageService: MessageService) {
         super();
 
