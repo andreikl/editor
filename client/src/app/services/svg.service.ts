@@ -88,10 +88,39 @@ export class SvgService {
                         + pen.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
                         + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
+                case Constants.ID_SIZE:
+                {
+                    const angle = Math.PI / 18;
+                    const rx = Math.abs(o.end.x - o.start.x);
+                    const ry = Math.abs(o.end.y - o.start.y);
+
+                    const cospl = Constants.SELECTION_CIRCLE * Math.cos(angle);
+                    const sinpl = Constants.SELECTION_CIRCLE * Math.sin(angle);
+                    const cosmi = Constants.SELECTION_CIRCLE * Math.cos(-angle);
+                    const sinmi = Constants.SELECTION_CIRCLE * Math.sin(-angle);
+
+                    return '<path id="' + o.id + '" d="' +
+                        ' M' + o.start.x + ' ' + o.start.y +
+                        ' L' + (o.start.x + cospl) + ' ' + (o.start.y + sinpl) +
+                        ' L' + (o.start.x + cosmi) + ' ' + (o.start.y + sinmi) +
+                        ' L' + o.start.x + ' ' + o.start.y +
+                        ' Z' +
+                        ' M' + o.start.x + ' ' + o.start.y +
+                        ' L' + o.end.x + ' ' + o.end.y +
+                        ' Z' +
+                        ' M' + o.end.x + ' ' + o.end.y +
+                        ' L' + (o.end.x - cospl) + ' ' + (o.end.y - sinpl) +
+                        ' L' + (o.end.x - cosmi) + ' ' + (o.end.y - sinmi) +
+                        ' L' + o.end.x + ' ' + o.end.y +
+                        ' Z' +
+                        '" stroke-width="0.1" stroke="#000000" />\n';
+                }
+
                 case Constants.ID_ARC:
+                {
                     const dataArc = <PrimitiveArc>o;
                     const rx = Math.abs(o.end.x - o.start.x);
-                    const ry = Math.abs(o.end.x - o.start.x);
+                    const ry = Math.abs(o.end.y - o.start.y);
                     const startx = rx * Math.cos(dataArc.startAngle);
                     const starty = ry * Math.sin(dataArc.startAngle);
                     const endx = rx * Math.cos(dataArc.endAngle);
@@ -101,6 +130,7 @@ export class SvgService {
                         return '<path id="' + o.id + '" d="M' + (o.start.x + startx) + ',' + (o.start.y + starty) + ' A' + rx + ',' + ry + ' 0 0,1 ' + (o.start.x + endx) + ',' + (o.start.y + endy) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
                     else
                         return '<ellipse id="' + o.id + '" cx="' + o.start.x + '" cy="' + o.start.y + '" rx="' + rx + '" ry="' + ry + '" stroke-width="1" stroke="#000000" fill="none" />\n';
+                }
 
                 default:
                     return '';

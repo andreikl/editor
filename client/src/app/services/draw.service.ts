@@ -114,13 +114,43 @@ export class DrawService {
 
     drawSize(x1, y1, x2, y2, data, context) {
         context.beginPath();
+        context.font = Constants.SELECTION_CIRCLE + "px Arial";
         context.moveTo(x1, y1);
         context.lineTo(x2, y2);
+
+        const width = Math.abs((x2 - x1));
+        const text = width.toFixed(2);
+        const textWidth = context.measureText(text).width / 2;
+
+        if (x2 > x1) {
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+            context.fillText(width.toFixed(2), x1 + (width / 2) - textWidth, y1 - 2);
+        } else {
+            context.moveTo(x1, y1);
+            context.lineTo(x1 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x1, y1);
+            context.lineTo(x1 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x2, y2);
+            context.lineTo(x2 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+            context.moveTo(x2, y2);
+            context.lineTo(x2 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+            context.fillText(width.toFixed(2), x2 + (width / 2) - textWidth, y2 - 2);
+        }
         context.stroke();
     }
 
     drawSelection(context, isGrid?: Boolean) {
         if (this.appModel.selectedPrimitive) {
+            if (this.appModel.selectedPrimitive.type == Constants.ID_SIZE) {
+                isGrid = false;
+            }
             const xn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.x / this.appModel.grid): this.appModel.selectedPrimitive.start.x;
             const yn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.y / this.appModel.grid): this.appModel.selectedPrimitive.start.y;
             const xn2 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.end.x / this.appModel.grid): this.appModel.selectedPrimitive.end.x;
@@ -137,7 +167,7 @@ export class DrawService {
             context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
             context.stroke();
 
-            if (this.appModel.selectedPrimitive.id == Constants.ID_PEN) {
+            if (this.appModel.selectedPrimitive.type == Constants.ID_PEN) {
                 const pen = <PrimitivePen>this.appModel.selectedPrimitive;
                 pen.points.forEach((o, index) => {
                     const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
