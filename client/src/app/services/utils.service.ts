@@ -115,16 +115,16 @@ export class UtilsService {
     // check if edge of primitive close enough to point
     testPrimitive(prim: Primitive, point: Point): boolean {
         switch(prim.type) {
-            case Constants.ID_LINE:
-            case Constants.ID_SIZE:
+            case Constants.TYPE_LINE:
+            case Constants.TYPE_SIZE:
                 return this.testLine(prim.start, prim.end, point);
 
-            case Constants.ID_ARC:
+            case Constants.TYPE_ARC:
                 //const canvas = this.canvas.nativeElement;
                 //const context = canvas.getContext("2d");
                 return this.testEllipse(prim.start, prim.end, point);
 
-            case Constants.ID_RECTANGLE:
+            case Constants.TYPE_RECTANGLE:
                 return this.testLine(prim.start, {
                     'x': prim.start.x,
                     'y': prim.end.y
@@ -139,7 +139,7 @@ export class UtilsService {
                     'y': prim.start.y
                 }, prim.start, point);
 
-            case Constants.ID_PEN:
+            case Constants.TYPE_PEN:
                 const pen = <PrimitivePen>prim;
                 return pen.points.reduce((x, y) => {
                     return {
@@ -187,7 +187,7 @@ export class UtilsService {
     // get closest point to primitive
     getClosestPrimitivePoint(prim: Primitive, p: Point): Point {
         switch (prim.type) {
-            case Constants.ID_LINE:
+            case Constants.TYPE_LINE:
                 return this.closestLinePoint(prim.start, prim.end, p);
         }
         return p;
@@ -210,7 +210,7 @@ export class UtilsService {
                 'direction': PointType.EndPoint,
                 'primitive': this.appModel.selectedPrimitive
             };
-        } else if (o.type == Constants.ID_PEN) {
+        } else if (o.type == Constants.TYPE_PEN) {
             const pen = <PrimitivePen>o;
             return pen.points.filter(point => {
                 const p = this.fromNormal(point);
@@ -257,7 +257,7 @@ export class UtilsService {
     //Factory to create primitives
     createPrimitive(type: string | undefined, point: Point): Primitive | undefined {
         switch (type) {
-            case Constants.ID_ARC:
+            case Constants.TYPE_ARC:
                 return <PrimitiveArc> {
                     'id': Date.now().toString(),
                     'type': type,
@@ -267,7 +267,7 @@ export class UtilsService {
                     'endAngle': 2 * Math.PI
                 };
 
-            case Constants.ID_PEN:
+            case Constants.TYPE_PEN:
                 return <PrimitivePen> {
                     'id': Date.now().toString(),
                     'type': type,
@@ -275,8 +275,8 @@ export class UtilsService {
                     'end': { 'x': point.x, 'y': point.y },
                     'points': new Array<Point>()
                 };
-            case Constants.ID_LINE:
-            case Constants.ID_RECTANGLE:
+            case Constants.TYPE_LINE:
+            case Constants.TYPE_RECTANGLE:
                 return <Primitive> {
                     'id': Date.now().toString(),
                     'type': type,
@@ -287,6 +287,102 @@ export class UtilsService {
             default:
                 return undefined;
 
+        }
+    }
+
+    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive {
+        // swap position if  x1 > x2
+        const isSwap = start.x > end.x;
+        const ps = <PrimitiveSize> {
+            'id': Date.now().toString(),
+            'type': Constants.TYPE_SIZE,
+            'start': this.clone(isSwap? end: start, false),
+            'end': this.clone(isSwap? start: end, false),
+            'ref1': isSwap? ref2.id: ref1.id,
+            'ref2': isSwap? ref1.id: ref2.id
+        }
+        if (!ref1.references) {
+            ref1.references = new Array<string>();
+        }
+        ref1.references.push(ps.id);
+        if (!ref2.references) {
+            ref2.references = new Array<string>();
+        }
+        ref2.references.push(ps.id);
+
+        this.moveSizePrimitive(ps, isSwap? PointType.StartPoint: PointType.EndPoint, end);
+
+        this.appModel.selectedPrimitive = ps;
+        this.appModel.data.set(ps.id, ps);
+
+        return ps;
+    }
+
+    //addPrimitive
+    addPrimitive = (prim: Primitive) => {
+        prim.start.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(prim.start.x / this.appModel.grid): prim.start.x;
+        prim.start.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(prim.start.y / this.appModel.grid): prim.start.y;
+        prim.end.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(prim.end.x / this.appModel.grid): prim.end.x;
+        prim.end.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(prim.end.y / this.appModel.grid): prim.end.y;
+
+        this.appModel.data.set(prim.id, prim);
+
+        // clear creation state
+        this.appModel.selectedTool = undefined;
+    }
+
+    movePrimitive = (p: Primitive, pp: PrimitivePoint, point: Point) => {
+        if (pp.direction == PointType.StartPoint) {
+            const oldx = pp.point.x;
+            const oldy = pp.point.y;
+            pp.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
+            pp.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
+            const deltax = pp.point.x - oldx;
+            const deltay = pp.point.y - oldy;
+            p.end.x += deltax;
+            p.end.y += deltay;
+            if (p.type == Constants.TYPE_PEN) {
+                const pp = <PrimitivePen>p;
+                pp.points.forEach(o => {
+                    o.x += deltax;
+                    o.y += deltay;
+                });
+            }
+        } else {
+            pp.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
+            pp.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
+        }
+        if (p.references) {
+            p.references.forEach(ref => {
+                let ps = <PrimitiveSize>this.appModel.data.get(ref);
+                if (p.id == ps.ref1) {
+                    this.moveSizePrimitive(ps, PointType.StartPoint, ps.start);
+                } else {
+                    this.moveSizePrimitive(ps, PointType.EndPoint, ps.end);
+                }
+            });
+        }
+    }
+
+    moveSizePrimitive = (ps: PrimitiveSize, pt: PointType, point: Point) => {
+        const firstPrim = this.appModel.data.get(ps.ref1);
+        const secondPrim = this.appModel.data.get(ps.ref2);
+        if (firstPrim && secondPrim) {
+            if (pt == PointType.StartPoint) {
+                const p = this.getClosestPrimitivePoint(firstPrim, point);
+                const x = this.getXofLine(secondPrim.start, secondPrim.end, p.y);
+                ps.start.x = p.x;
+                ps.start.y = p.y;
+                ps.end.x = x;
+                ps.end.y = p.y;
+            } else {
+                const p = this.getClosestPrimitivePoint(secondPrim, point);
+                const x = this.getXofLine(firstPrim.start, firstPrim.end, p.y);
+                ps.start.x = x;
+                ps.start.y = p.y;
+                ps.end.x = p.x;
+                ps.end.y = p.y;
+            }
         }
     }
 

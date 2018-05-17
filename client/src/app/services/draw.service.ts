@@ -118,37 +118,24 @@ export class DrawService {
         context.moveTo(x1, y1);
         context.lineTo(x2, y2);
 
-        const width = Math.abs((x2 - x1));
-        const text = width.toFixed(2);
+        const text = (data.end.x - data.start.x).toFixed(2);
         const textWidth = context.measureText(text).width / 2;
 
-        if (x2 > x1) {
-            context.moveTo(x1, y1);
-            context.lineTo(x1 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x1, y1);
-            context.lineTo(x1 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x2, y2);
-            context.lineTo(x2 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x2, y2);
-            context.lineTo(x2 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-            context.fillText(width.toFixed(2), x1 + (width / 2) - textWidth, y1 - 2);
-        } else {
-            context.moveTo(x1, y1);
-            context.lineTo(x1 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x1, y1);
-            context.lineTo(x1 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x2, y2);
-            context.lineTo(x2 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-            context.moveTo(x2, y2);
-            context.lineTo(x2 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-            context.fillText(width.toFixed(2), x2 + (width / 2) - textWidth, y2 - 2);
-        }
+        context.moveTo(x1, y1);
+        context.lineTo(x1 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+        context.moveTo(x1, y1);
+        context.lineTo(x1 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+        context.moveTo(x2, y2);
+        context.lineTo(x2 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
+        context.moveTo(x2, y2);
+        context.lineTo(x2 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
+        context.fillText(text, x1 + Math.abs((x2 - x1) / 2) - textWidth, y1 - 2);
         context.stroke();
     }
 
     drawSelection(context, isGrid?: Boolean) {
         if (this.appModel.selectedPrimitive) {
-            if (this.appModel.selectedPrimitive.type == Constants.ID_SIZE) {
+            if (this.appModel.selectedPrimitive.type == Constants.TYPE_SIZE) {
                 isGrid = false;
             }
             const xn1 = isGrid? this.appModel.grid * Math.round(this.appModel.selectedPrimitive.start.x / this.appModel.grid): this.appModel.selectedPrimitive.start.x;
@@ -167,7 +154,7 @@ export class DrawService {
             context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
             context.stroke();
 
-            if (this.appModel.selectedPrimitive.type == Constants.ID_PEN) {
+            if (this.appModel.selectedPrimitive.type == Constants.TYPE_PEN) {
                 const pen = <PrimitivePen>this.appModel.selectedPrimitive;
                 pen.points.forEach((o, index) => {
                     const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
@@ -191,19 +178,19 @@ export class DrawService {
         const y2 = this.appModel.zoom * (this.appModel.offset.y + yn2);
 
         switch(data.type) {
-            case Constants.ID_LINE:
+            case Constants.TYPE_LINE:
                 return this.drawLine(x1, y1, x2, y2, data, context);
 
-            case Constants.ID_RECTANGLE:
+            case Constants.TYPE_RECTANGLE:
                 return this.drawRect(x1, y1, x2, y2, data, context);
 
-            case Constants.ID_PEN:
+            case Constants.TYPE_PEN:
                 return this.drawPen(x1, y1, x2, y2, data, context);
 
-            case Constants.ID_ARC:
+            case Constants.TYPE_ARC:
                 return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), data, context);
 
-            case Constants.ID_SIZE:
+            case Constants.TYPE_SIZE:
                 return this.drawSize(x1, y1, x2, y2, data, context);
 
         }

@@ -24,19 +24,19 @@ export class AppComponent implements OnInit {
         sanitizer: DomSanitizer,
         private appModel: AppModel) {
 
-        iconRegistry.addSvgIcon(Constants.ID_LINE, sanitizer.bypassSecurityTrustResourceUrl('/assets/line.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_RECTANGLE, sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_PEN, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_ARC, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_SIZE, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_GRID, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_PLUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/save.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_LOAD, sanitizer.bypassSecurityTrustResourceUrl('/assets/load.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_BACK, sanitizer.bypassSecurityTrustResourceUrl('/assets/back.svg'));
-        iconRegistry.addSvgIcon(Constants.ID_NEXT, sanitizer.bypassSecurityTrustResourceUrl('/assets/next.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_LINE, sanitizer.bypassSecurityTrustResourceUrl('/assets/line.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_RECTANGLE, sanitizer.bypassSecurityTrustResourceUrl('/assets/rectangle.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_PEN, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_ARC, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_SIZE, sanitizer.bypassSecurityTrustResourceUrl('/assets/pen.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_GRID, sanitizer.bypassSecurityTrustResourceUrl('/assets/grid.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_PLUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/plus.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_MINUS, sanitizer.bypassSecurityTrustResourceUrl('/assets/minus.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_SAVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/save.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_LOAD, sanitizer.bypassSecurityTrustResourceUrl('/assets/load.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_MOVE, sanitizer.bypassSecurityTrustResourceUrl('/assets/move.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_BACK, sanitizer.bypassSecurityTrustResourceUrl('/assets/back.svg'));
+        iconRegistry.addSvgIcon(Constants.TYPE_NEXT, sanitizer.bypassSecurityTrustResourceUrl('/assets/next.svg'));
     }
 
     ngOnInit() {

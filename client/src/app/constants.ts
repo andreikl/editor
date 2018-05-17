@@ -9,19 +9,19 @@ export class Constants {
     static EVENT_SELECTED_PRIMITIVE = 'selectedPrimitive';
     static EVENT_SELECTED_TOOL = 'selectedTool';
 
-    static ID_LINE = 'line';
-    static ID_RECTANGLE = 'rectangle';
-    static ID_PEN = 'pen';
-    static ID_ARC = 'arc';
-    static ID_SIZE = 'size';
-    static ID_PLUS = 'plus';
-    static ID_MINUS = 'minus';
-    static ID_GRID = 'grid';
-    static ID_MOVE = 'move';
-    static ID_SAVE = 'save';
-    static ID_LOAD = 'load';
-    static ID_BACK = 'back';
-    static ID_NEXT = 'next';
+    static TYPE_LINE = 'line';
+    static TYPE_RECTANGLE = 'rectangle';
+    static TYPE_PEN = 'pen';
+    static TYPE_ARC = 'arc';
+    static TYPE_SIZE = 'size';
+    static TYPE_PLUS = 'plus';
+    static TYPE_MINUS = 'minus';
+    static TYPE_GRID = 'grid';
+    static TYPE_MOVE = 'move';
+    static TYPE_SAVE = 'save';
+    static TYPE_LOAD = 'load';
+    static TYPE_BACK = 'back';
+    static TYPE_NEXT = 'next';
 
     static DEFAULT_ZOOM_DELATA = 1.0;
     static DEFAULT_GRID = 4.0;
@@ -40,24 +40,24 @@ export class Constants {
     static SVG_FILENAME = 'svgfile.svg';
 
     static TOOL_ITEMS = [
-        { id: Constants.ID_LINE, name: "Line", isActive: true },
-        { id: Constants.ID_RECTANGLE, name: "Rectangle", isActive: false },
-        { id: Constants.ID_PEN, name: "Pen", isActive: false },
-        { id: Constants.ID_ARC, name: "Arc", isActive: false },
-        { id: Constants.ID_SIZE, name: "Size", isActive: false },
+        { id: Constants.TYPE_LINE, name: "Line", isActive: true },
+        { id: Constants.TYPE_RECTANGLE, name: "Rectangle", isActive: false },
+        { id: Constants.TYPE_PEN, name: "Pen", isActive: false },
+        { id: Constants.TYPE_ARC, name: "Arc", isActive: false },
+        { id: Constants.TYPE_SIZE, name: "Size", isActive: false },
     ];
     
     static PAGE_ITEMS = {
-        'plus': { id: Constants.ID_PLUS, name: "Zoom In", isActive: false },
-        'minus': { id: Constants.ID_MINUS, name: "Zoom Out", isActive: false },
-        'grid': { id: Constants.ID_GRID, name: "Grid", isActive: false },
-        'move': { id: Constants.ID_MOVE, name: "Move", isActive: false },
+        'plus': { id: Constants.TYPE_PLUS, name: "Zoom In", isActive: false },
+        'minus': { id: Constants.TYPE_MINUS, name: "Zoom Out", isActive: false },
+        'grid': { id: Constants.TYPE_GRID, name: "Grid", isActive: false },
+        'move': { id: Constants.TYPE_MOVE, name: "Move", isActive: false },
     };
 
     static FILE_ITEMS = {
-        'save': { id: Constants.ID_SAVE, name: "Save", isActive: false },
-        'load': { id: Constants.ID_LOAD, name: "Load", isActive: false },
-        'back': { id: Constants.ID_BACK, name: "Back", isActive: false },
-        'next': { id: Constants.ID_NEXT, name: "Next", isActive: false }
+        'save': { id: Constants.TYPE_SAVE, name: "Save", isActive: false },
+        'load': { id: Constants.TYPE_LOAD, name: "Load", isActive: false },
+        'back': { id: Constants.TYPE_BACK, name: "Back", isActive: false },
+        'next': { id: Constants.TYPE_NEXT, name: "Next", isActive: false }
     };
 };

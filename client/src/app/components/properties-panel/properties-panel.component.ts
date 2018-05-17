@@ -62,47 +62,47 @@ export class PropertiesPanelComponent implements OnInit {
 
     clickHandler($event: Event, item: ControlItem) {
         switch (item.id) {
-            case Constants.ID_PLUS:
+            case Constants.TYPE_PLUS:
                 return this.appModel.zoom = this.appModel.zoom + Constants.DEFAULT_ZOOM_DELATA;
 
-            case Constants.ID_MINUS:
+            case Constants.TYPE_MINUS:
                 return this.appModel.zoom = this.appModel.zoom - Constants.DEFAULT_ZOOM_DELATA;
 
-            case Constants.ID_GRID:
+            case Constants.TYPE_GRID:
                 return this.appModel.grid = isNaN(this.appModel.grid)? Constants.DEFAULT_GRID: NaN;
 
-            case Constants.ID_SAVE:
+            case Constants.TYPE_SAVE:
                 return this.svgService.save();
 
-            case Constants.ID_BACK:
+            case Constants.TYPE_BACK:
                 return this.historyService.back();
 
-            case Constants.ID_NEXT:
+            case Constants.TYPE_NEXT:
                 return this.historyService.next();
 
-            case Constants.ID_MOVE:
+            case Constants.TYPE_MOVE:
                 return this.appModel.selectedTool = item.id;
         };
     }
 
     drawWindow() {
-        if (this.appModel.selectedPrimitive && (this.appModel.selectedPrimitive.type == Constants.ID_RECTANGLE
-            || this.appModel.selectedPrimitive.type == Constants.ID_LINE
-            || this.appModel.selectedPrimitive.type == Constants.ID_PEN)) {
+        if (this.appModel.selectedPrimitive && (this.appModel.selectedPrimitive.type == Constants.TYPE_RECTANGLE
+            || this.appModel.selectedPrimitive.type == Constants.TYPE_LINE
+            || this.appModel.selectedPrimitive.type == Constants.TYPE_PEN)) {
             //clear all content and load new
             this.view.clear();
 
             const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesRectangleComponent);
             this.view.createComponent(componentFactory);
 
-            if (this.appModel.selectedPrimitive.type == Constants.ID_RECTANGLE) {
+            if (this.appModel.selectedPrimitive.type == Constants.TYPE_RECTANGLE) {
                 this.title = 'Rectangle properies';
-            } else if (this.appModel.selectedPrimitive.type == Constants.ID_LINE) {
+            } else if (this.appModel.selectedPrimitive.type == Constants.TYPE_LINE) {
                 this.title = 'Line properies';
-            } else if (this.appModel.selectedPrimitive.type == Constants.ID_PEN) {
+            } else if (this.appModel.selectedPrimitive.type == Constants.TYPE_PEN) {
                 this.title = 'Pen properies';
             }
-        } else if (this.appModel.selectedPrimitive && this.appModel.selectedPrimitive.type == Constants.ID_ARC) {
+        } else if (this.appModel.selectedPrimitive && this.appModel.selectedPrimitive.type == Constants.TYPE_ARC) {
             this.view.clear();
 
             const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesArcComponent);

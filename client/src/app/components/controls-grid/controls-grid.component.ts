@@ -37,11 +37,11 @@ export class ControlsGridComponent implements OnInit {
         this.active = item;
 
         switch (item.id) {
-            case Constants.ID_LINE:
-            case Constants.ID_RECTANGLE:
-            case Constants.ID_PEN:
-            case Constants.ID_ARC:
-            case Constants.ID_SIZE:
+            case Constants.TYPE_LINE:
+            case Constants.TYPE_RECTANGLE:
+            case Constants.TYPE_PEN:
+            case Constants.TYPE_ARC:
+            case Constants.TYPE_SIZE:
                 return this.appModel.selectedTool = item.id;
         };
     }

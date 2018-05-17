@@ -68,7 +68,7 @@ export class CanvasComponent implements OnInit {
             if (this.draggablePoint) { // editing primitive state
                 draggablePoint = this.draggablePoint;
                 return draggablePoint.primitive;
-            } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
+            } else if (this.appModel.selectedTool == Constants.TYPE_MOVE) { // moving page state
                 return <Primitive> {
                     'id': Date.now().toString(),
                     'type': this.appModel.selectedTool,
@@ -92,53 +92,17 @@ export class CanvasComponent implements OnInit {
 
             const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
-                if (draggablePoint.primitive.type == Constants.ID_SIZE) { // size primitive has special logic
-                    const sp = <PrimitiveSize>draggablePoint.primitive;
-                    if (draggablePoint.direction == PointType.StartPoint) {
-                        const firstPrim = this.appModel.data.get(sp.ref1);
-                        const secondPrim = this.appModel.data.get(sp.ref2);
-                        if (firstPrim && secondPrim) {
-                            const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
-                            const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
-                            draggablePoint.point.x = p.x;
-                            draggablePoint.point.y = p.y;
-                            draggablePoint.primitive.end.x = x;
-                            draggablePoint.primitive.end.y = p.y;
-                        }
-                    } else {
-                        const firstPrim = this.appModel.data.get(sp.ref1);
-                        const secondPrim = this.appModel.data.get(sp.ref2);
-                        if (firstPrim && secondPrim) {
-                            const p = this.utilsService.getClosestPrimitivePoint(firstPrim, point);
-                            const x = this.utilsService.getXofLine(secondPrim.start, secondPrim.end, p.y);
-                            draggablePoint.point.x = p.x;
-                            draggablePoint.point.y = p.y;
-                            draggablePoint.primitive.start.x = x;
-                            draggablePoint.primitive.start.y = p.y;
-                        }
-                    }
-                } else if (draggablePoint.direction == PointType.StartPoint) { // keep proportion
-                    const oldx = draggablePoint.point.x;
-                    const oldy = draggablePoint.point.y;
-                    draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
-                    draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
-                    const deltax = draggablePoint.point.x - oldx;
-                    const deltay = draggablePoint.point.y - oldy;
-                    draggablePoint.primitive.end.x += deltax;
-                    draggablePoint.primitive.end.y += deltay;
-                    if (draggablePoint.primitive.type == Constants.ID_PEN) {
-                        const pp = <PrimitivePen>draggablePoint.primitive;
-                        pp.points.forEach(o => {
-                            o.x += deltax;
-                            o.y += deltay;
-                        });
-                    }
+                if (draggablePoint.primitive.type == Constants.TYPE_SIZE) { // size primitive has special logic
+                    this.utilsService.moveSizePrimitive(
+                        <PrimitiveSize>draggablePoint.primitive,
+                        draggablePoint.direction,
+                        point
+                    );
                 } else {
-                    draggablePoint.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
-                    draggablePoint.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
+                    this.utilsService.movePrimitive(draggablePoint.primitive, draggablePoint, point);
                 }
                 this.drawScene(null);
-            } else if (this.appModel.selectedTool == Constants.ID_MOVE) { // moving page state
+            } else if (this.appModel.selectedTool == Constants.TYPE_MOVE) { // moving page state
                 this.appModel.offset = {
                     x: this.appModel.offset.x + (y.x - x.end.x) / this.appModel.zoom,
                     y: this.appModel.offset.y + (y.y - x.end.y) / this.appModel.zoom
@@ -149,7 +113,7 @@ export class CanvasComponent implements OnInit {
             } else { // creating primitive state
                 x.end.x = y.x = point.x;
                 x.end.y = y.y = point.y;
-                if (this.appModel.selectedTool == Constants.ID_PEN) {
+                if (this.appModel.selectedTool == Constants.TYPE_PEN) {
                     const pen = <PrimitivePen>x;
                     const lastIndex = pen.points.length - 1;
                     if (lastIndex >= 0 && (pen.points[lastIndex].x != y.x || pen.points[lastIndex].y != y.y)) {
@@ -167,21 +131,13 @@ export class CanvasComponent implements OnInit {
             if (draggablePoint) {
                 draggablePoint = undefined;
                 this.historyService.snapshoot();
-            } else if (data.type == Constants.ID_LINE ||
-                data.type == Constants.ID_RECTANGLE ||
-                data.type == Constants.ID_PEN ||
-                data.type == Constants.ID_ARC) {
+            } else if (data.type == Constants.TYPE_LINE ||
+                data.type == Constants.TYPE_RECTANGLE ||
+                data.type == Constants.TYPE_PEN ||
+                data.type == Constants.TYPE_ARC) {
 
-                data.start.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.x / this.appModel.grid): data.start.x;
-                data.start.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.start.y / this.appModel.grid): data.start.y;
-                data.end.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
-                data.end.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(data.end.y / this.appModel.grid): data.end.y;
-    
-                this.appModel.data.set(data.id, data);
+                this.utilsService.addPrimitive(data)
                 this.historyService.snapshoot();
-
-                // clear creation state
-                this.appModel.selectedTool = undefined;
             }
         }
 
@@ -270,33 +226,21 @@ export class CanvasComponent implements OnInit {
         let firstPrimitive;
         const selectionFinished = (start: Point, end: Point) => {
             if (isSelectionOrMoving(start, end)) {
-                this.selectPrimitive(this.utilsService.toNormal({
+                const point = this.utilsService.toNormal({
                     'x': start.x + (end.x - start.x) / 2,
                     'y': start.y + (end.y - start.y) / 2,
-                }));
-                if (this.appModel.selectedTool == Constants.ID_SIZE) {
+                });
+                this.selectPrimitive(point);
+                if (this.appModel.selectedTool == Constants.TYPE_SIZE) {
                     if (!firstPrimitive) {
                         firstPrimitive = this.appModel.selectedPrimitive;
                     } else if (this.appModel.selectedPrimitive) {
-                        const primSize = <PrimitiveSize> {
-                            'id': Date.now().toString(),
-                            'type': this.appModel.selectedTool,
-                            'start': this.utilsService.clone(firstPrimitive.start, false),
-                            'end': this.utilsService.clone(this.appModel.selectedPrimitive.end, false),
-                            'ref1': firstPrimitive.id,
-                            'ref2': this.appModel.selectedPrimitive.id
-                        }
-                        if (!firstPrimitive.references) {
-                            firstPrimitive.references = new Array<string>();
-                        }
-                        firstPrimitive.references.push(primSize.id);
-                        if (!this.appModel.selectedPrimitive.references) {
-                            this.appModel.selectedPrimitive.references = new Array<string>();
-                        }
-                        this.appModel.selectedPrimitive.references.push(primSize.id);
-
-                        this.appModel.selectedPrimitive = primSize;
-                        this.appModel.data.set(this.appModel.selectedPrimitive.id, this.appModel.selectedPrimitive);
+                        const prim = this.utilsService.createSizePrimitive(
+                            firstPrimitive.start,
+                            point,
+                            firstPrimitive,
+                            this.appModel.selectedPrimitive,
+                        );
                         this.historyService.snapshoot();
 
                         // clear creation state

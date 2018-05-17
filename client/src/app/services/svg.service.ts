@@ -30,7 +30,7 @@ export class SvgService {
     private getHeader() {
         const getStart = (o) => {
             o = this.normalize(o);
-            if (o.type == Constants.ID_ARC) {
+            if (o.type == Constants.TYPE_ARC) {
                 return {
                     'x': o.start.x - Math.abs(o.end.x - o.start.x),
                     'y': o.start.y - Math.abs(o.end.y - o.start.y)
@@ -69,26 +69,30 @@ export class SvgService {
             }
         });
 
-        return '<svg viewBox="' + r.start.x + ' ' + r.start.y + ' ' + (r.end.x - r.start.x) + ' ' + (r.end.y - r.start.y) + '" xmlns="http://www.w3.org/2000/svg">\n<g>\n';
+        return '<svg viewBox="' + r.start.x + ' ' + r.start.y + ' ' + (r.end.x - r.start.x) + ' ' + (r.end.y - r.start.y) + '" xmlns="http://www.w3.org/2000/svg">\n' +
+            '<g>\n' +
+            '<style>' +
+            '   .text { font: ' + Constants.SELECTION_CIRCLE + 'px arial; }' +
+            '</style>';
     }
 
     private getBody() {
         return Array.from(this.appModel.data.values()).map(o => {
             switch (o.type) {
-                case Constants.ID_LINE:
+                case Constants.TYPE_LINE:
                     return '<line id="' + o.id + '" x1="' + o.start.x + '" y1="' + o.start.y + '" x2="' + o.end.x + '" y2="' + o.end.y + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
-                case Constants.ID_RECTANGLE:
+                case Constants.TYPE_RECTANGLE:
                     o = this.normalize(o);
                     return '<rect id="' + o.id + '" x="' + o.start.x + '" y="' + o.start.y + '" width="' + (o.end.x - o.start.x) + '" height="' + (o.end.y - o.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
-                case Constants.ID_PEN:
+                case Constants.TYPE_PEN:
                     const pen = <PrimitivePen>o;
                     return '<polyline id="' + o.id + '" points="' + pen.start.x + ',' + pen.start.y + ' '
                         + pen.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
                         + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
-                case Constants.ID_SIZE:
+                case Constants.TYPE_SIZE:
                 {
                     const angle = Math.PI / 18;
                     const rx = Math.abs(o.end.x - o.start.x);
@@ -100,23 +104,24 @@ export class SvgService {
                     const sinmi = Constants.SELECTION_CIRCLE * Math.sin(-angle);
 
                     return '<path id="' + o.id + '" d="' +
-                        ' M' + o.start.x + ' ' + o.start.y +
-                        ' L' + (o.start.x + cospl) + ' ' + (o.start.y + sinpl) +
-                        ' L' + (o.start.x + cosmi) + ' ' + (o.start.y + sinmi) +
-                        ' L' + o.start.x + ' ' + o.start.y +
+                        ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                        ' L' + (o.start.x + cospl).toFixed(2) + ' ' + (o.start.y + sinpl).toFixed(2) +
+                        ' L' + (o.start.x + cosmi).toFixed(2) + ' ' + (o.start.y + sinmi).toFixed(2) +
+                        ' L' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
                         ' Z' +
-                        ' M' + o.start.x + ' ' + o.start.y +
-                        ' L' + o.end.x + ' ' + o.end.y +
+                        ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                        ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
                         ' Z' +
-                        ' M' + o.end.x + ' ' + o.end.y +
-                        ' L' + (o.end.x - cospl) + ' ' + (o.end.y - sinpl) +
-                        ' L' + (o.end.x - cosmi) + ' ' + (o.end.y - sinmi) +
-                        ' L' + o.end.x + ' ' + o.end.y +
+                        ' M' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                        ' L' + (o.end.x - cospl).toFixed(2) + ' ' + (o.end.y - sinpl).toFixed(2) +
+                        ' L' + (o.end.x - cosmi).toFixed(2) + ' ' + (o.end.y - sinmi).toFixed(2) +
+                        ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
                         ' Z' +
-                        '" stroke-width="0.1" stroke="#000000" />\n';
+                        '" stroke-width="0.1" stroke="#000000" />\n'+
+                        '<text x="' + (o.start.x + rx / 2).toFixed(2) + '" y="' + (o.start.y - 2).toFixed(2) + '" class="text">' + rx.toFixed(2) + '</text>';
                 }
 
-                case Constants.ID_ARC:
+                case Constants.TYPE_ARC:
                 {
                     const dataArc = <PrimitiveArc>o;
                     const rx = Math.abs(o.end.x - o.start.x);
@@ -168,7 +173,7 @@ export class SvgService {
                 Array.from(xmlDom.getElementsByTagName('line')).map(o => {
                     return <Primitive> {
                         'id': o.id,
-                        'type': Constants.ID_LINE,
+                        'type': Constants.TYPE_LINE,
                         'start': { 'x': o.x1.baseVal.value, 'y': o.y1.baseVal.value },
                         'end': { 'x': o.x2.baseVal.value, 'y': o.y2.baseVal.value }
                     }
