@@ -32,6 +32,9 @@ export class Constants {
     static MINIMAL_SIZE = 4;
     static MAXIMUM_HISTORY = 20;
 
+    static ORIENTATION_VERTICAL = 'vertical';
+    static ORIENTATION_HORIZONTAL = 'horizontal';
+
     static ZERO_POINT: Point = {
         'x': 0,
         'y': 0

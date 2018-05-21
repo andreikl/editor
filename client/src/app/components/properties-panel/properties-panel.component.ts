@@ -1,6 +1,7 @@
 import { Component, OnInit, ComponentFactoryResolver, ViewContainerRef, ViewChild, ElementRef } from '@angular/core';
 
 import { PropertiesRectangleComponent } from '../properties-rectangle/properties-rectangle.component';
+import { PropertiesSizeComponent } from '../properties-size/properties-size.component';
 import { PropertiesIdleComponent } from '../properties-idle/properties-idle.component';
 import { PropertiesArcComponent } from '../properties-arc/properties-arc.component';
 import { MessageService } from '../../services/message.service';
@@ -109,6 +110,13 @@ export class PropertiesPanelComponent implements OnInit {
             this.view.createComponent(componentFactory);
 
             this.title = 'Arc properies';
+        } else if (this.appModel.selectedPrimitive && this.appModel.selectedPrimitive.type == Constants.TYPE_SIZE) {
+            const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesSizeComponent);
+
+            this.view.clear();
+            this.view.createComponent(componentFactory);
+
+            this.title = 'Size properies';
         } else {
             const componentFactory = this.componentFactoryResolver.resolveComponentFactory(PropertiesIdleComponent);
             //clear all content and load new

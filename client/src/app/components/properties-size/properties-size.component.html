@@ -1,0 +1,28 @@
+<div class="panel">
+  <div class="column">
+      <mat-form-field>
+          <input type="number" matInput placeholder="X1" [(ngModel)]="primitive.start.x" (blur)="update()">
+      </mat-form-field>
+      <mat-form-field>
+          <input type="number" matInput placeholder="X2" [(ngModel)]="primitive.end.x" (blur)="update()">
+      </mat-form-field>
+  </div>
+  <div class="column">
+      <mat-form-field>
+          <input type="number" matInput placeholder="Y1" [(ngModel)]="primitive.start.y" (blur)="update()">
+      </mat-form-field>
+      <mat-form-field>
+          <input type="number" matInput placeholder="Y2" [(ngModel)]="primitive.end.y" (blur)="update()">
+      </mat-form-field>
+  </div>
+</div>
+<div class="panel">
+  <div>
+      <mat-form-field>
+          <mat-select placeholder="Orientation" [(ngModel)]="primitive.orientation" (blur)="update()">
+            <mat-option value="horizontal">Horizontal</mat-option>
+            <mat-option value="vertical">Vertical</mat-option>
+          </mat-select>
+      </mat-form-field>
+  </div>
+</div>

@@ -330,7 +330,8 @@ export class UtilsService {
             'start': getStart(r1),
             'end': getEnd(r2),
             'ref1': r1.id,
-            'ref2': r2.id
+            'ref2': r2.id,
+            'orientation': Constants.ORIENTATION_HORIZONTAL
         }
         if (!ref1.references) {
             ref1.references = new Array<string>();

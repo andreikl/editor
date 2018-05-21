@@ -6,7 +6,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MatIconModule,
     MatInputModule, MatFormFieldModule,
-    MatExpansionModule} from '@angular/material';
+    MatExpansionModule,
+    MatSelectModule} from '@angular/material';
 
 import { AppComponent } from './app.component';
 import { ControlsGridComponent } from './components/controls-grid/controls-grid.component';
@@ -20,6 +21,7 @@ import { PropertiesPanelComponent } from './components/properties-panel/properti
 import { PropertiesRectangleComponent } from './components/properties-rectangle/properties-rectangle.component';
 import { PropertiesIdleComponent } from './components/properties-idle/properties-idle.component';
 import { PropertiesArcComponent } from './components/properties-arc/properties-arc.component';
+import { PropertiesSizeComponent } from './components/properties-size/properties-size.component';
 import { FormsModule } from '@angular/forms';
 import { UtilsService } from './services/utils.service';
 import { DrawService } from './services/draw.service';
@@ -31,9 +33,10 @@ import { HistoryService } from './services/history.service';
         ControlsGridComponent,
         CanvasComponent,
         PanelComponent,
-        PropertiesPanelComponent,
         PropertiesRectangleComponent,
+        PropertiesPanelComponent,
         PropertiesIdleComponent,
+        PropertiesSizeComponent,
         PropertiesArcComponent
     ],
     imports: [
@@ -43,7 +46,7 @@ import { HistoryService } from './services/history.service';
 
         // -- Material Design
         MatExpansionModule,
-        MatInputModule, MatFormFieldModule,
+        MatInputModule, MatSelectModule, MatFormFieldModule,
         MatIconModule,
 
         // Animation module is requred for material design
@@ -60,6 +63,7 @@ import { HistoryService } from './services/history.service';
     entryComponents: [
         PropertiesRectangleComponent,
         PropertiesIdleComponent,
+        PropertiesSizeComponent,
         PropertiesArcComponent
     ],
     bootstrap: [AppComponent]

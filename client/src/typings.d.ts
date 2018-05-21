@@ -35,6 +35,7 @@ interface PrimitivePen extends Primitive {
 interface PrimitiveSize extends Primitive {
     'ref1': string;
     'ref2': string;
+    'orientation': string;
 }
 
 interface PrimitivePoint {
