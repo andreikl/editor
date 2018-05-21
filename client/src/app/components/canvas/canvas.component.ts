@@ -235,13 +235,14 @@ export class CanvasComponent implements OnInit {
                     if (!firstPrimitive) {
                         firstPrimitive = this.appModel.selectedPrimitive;
                     } else if (this.appModel.selectedPrimitive) {
-                        const prim = this.utilsService.createSizePrimitive(
+                        if(this.utilsService.createSizePrimitive(
                             firstPrimitive.start,
                             point,
                             firstPrimitive,
                             this.appModel.selectedPrimitive,
-                        );
-                        this.historyService.snapshoot();
+                        )) {
+                            this.historyService.snapshoot();
+                        }
 
                         // clear creation state
                         this.appModel.selectedTool = firstPrimitive  = undefined;

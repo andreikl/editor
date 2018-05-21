@@ -157,7 +157,7 @@ export class UtilsService {
     }
 
     // get closest point to line
-    closestLinePoint(a: Point, b: Point, point: Point) {
+    getClosestLinePoint(a: Point, b: Point, point: Point) {
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
@@ -182,15 +182,6 @@ export class UtilsService {
             'x': ab.x * t + a.x,
             'y': ab.y * t + a.y
         }
-    }
-
-    // get closest point to primitive
-    getClosestPrimitivePoint(prim: Primitive, p: Point): Point {
-        switch (prim.type) {
-            case Constants.TYPE_LINE:
-                return this.closestLinePoint(prim.start, prim.end, p);
-        }
-        return p;
     }
 
     // return point of primitive
@@ -290,16 +281,56 @@ export class UtilsService {
         }
     }
 
-    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive {
+    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
+        // supported: 1.line to other line case 2.rect to the same rect 
+        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id)
+            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id))
+            return undefined;
+
         // swap position if  x1 > x2
         const isSwap = start.x > end.x;
+        const r1 = isSwap? ref2: ref1;
+        const r2 = isSwap? ref1: ref2;
+
+        // calculate start point
+        const getStart = (r: Primitive) => {
+            if (r.type == Constants.TYPE_LINE) {
+                return <Point> {
+                    x: r.start.x + (r.end.x - r.start.x) / 2,
+                    y: r.start.y + (r.end.y - r.start.y) / 2,
+                }
+            } else if (r.type == Constants.TYPE_RECTANGLE) {
+                return <Point> {
+                    x: r.start.x,
+                    y: r.start.y + (r.end.y - r.start.y) / 2,
+                }
+            }
+        }
+        // calculate end point
+        const getEnd = (r: Primitive) => {
+            if (r.type == Constants.TYPE_LINE) {
+                return <Point> {
+                    x: r.start.x + (r.end.x - r.start.x) / 2,
+                    y: r.start.y + (r.end.y - r.start.y) / 2,
+                }
+            } else if (r.type == Constants.TYPE_RECTANGLE) {
+                return <Point> {
+                    x: r.end.x,
+                    y: r.start.y + (r.end.y - r.start.y) / 2,
+                }
+            }
+        }
+
+        const startPoint = getStart(r1);
+        const endPoint = getEnd(r2);
+
         const ps = <PrimitiveSize> {
             'id': Date.now().toString(),
             'type': Constants.TYPE_SIZE,
-            'start': this.clone(isSwap? end: start, false),
-            'end': this.clone(isSwap? start: end, false),
-            'ref1': isSwap? ref2.id: ref1.id,
-            'ref2': isSwap? ref1.id: ref2.id
+            'start': getStart(r1),
+            'end': getEnd(r2),
+            'ref1': r1.id,
+            'ref2': r2.id
         }
         if (!ref1.references) {
             ref1.references = new Array<string>();
@@ -365,23 +396,50 @@ export class UtilsService {
     }
 
     moveSizePrimitive = (ps: PrimitiveSize, pt: PointType, point: Point) => {
-        const firstPrim = this.appModel.data.get(ps.ref1);
-        const secondPrim = this.appModel.data.get(ps.ref2);
-        if (firstPrim && secondPrim) {
-            if (pt == PointType.StartPoint) {
-                const p = this.getClosestPrimitivePoint(firstPrim, point);
-                const x = this.getXofLine(secondPrim.start, secondPrim.end, p.y);
-                ps.start.x = p.x;
-                ps.start.y = p.y;
-                ps.end.x = x;
-                ps.end.y = p.y;
-            } else {
-                const p = this.getClosestPrimitivePoint(secondPrim, point);
-                const x = this.getXofLine(firstPrim.start, firstPrim.end, p.y);
-                ps.start.x = x;
-                ps.start.y = p.y;
-                ps.end.x = p.x;
-                ps.end.y = p.y;
+        const r1 = this.appModel.data.get(ps.ref1);
+        const r2 = this.appModel.data.get(ps.ref2);
+        if (r1 && r2) {
+            // line to other line case
+            if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) {
+                if (pt == PointType.StartPoint) {
+                    const p = this.getClosestLinePoint(r1.start, r1.end, point);
+                    const x = this.getXofLine(r2.start, r2.end, p.y);
+                    ps.start.x = p.x;
+                    ps.start.y = p.y;
+                    ps.end.x = x;
+                    ps.end.y = p.y;
+                } else {
+                    const p = this.getClosestLinePoint(r2.start, r2.end, point);
+                    const x = this.getXofLine(r1.start, r1.end, p.y);
+                    ps.start.x = x;
+                    ps.start.y = p.y;
+                    ps.end.x = p.x;
+                    ps.end.y = p.y;
+                }
+            } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id == r2.id) { // rect to the same rect case
+                const leftBottom = {
+                    'x': r1.start.x,
+                    'y': r1.end.y,
+                };
+                const rightTop = {
+                    'x': r1.end.x,
+                    'y': r1.start.y,
+                };
+                if (pt == PointType.StartPoint) {
+                    const p = this.getClosestLinePoint(r1.start, leftBottom, point);
+                    const x = this.getXofLine(rightTop, r2.end, p.y);
+                    ps.start.x = p.x;
+                    ps.start.y = p.y;
+                    ps.end.x = x;
+                    ps.end.y = p.y;
+                } else {
+                    const p = this.getClosestLinePoint(rightTop, r2.end, point);
+                    const x = this.getXofLine(r1.start, leftBottom, p.y);
+                    ps.start.x = x;
+                    ps.start.y = p.y;
+                    ps.end.x = p.x;
+                    ps.end.y = p.y;
+                }
             }
         }
     }
