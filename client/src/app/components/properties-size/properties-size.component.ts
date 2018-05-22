@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { MessageService } from '../../services/message.service';
+import { UtilsService } from '../../services/utils.service';
 import { AppModel } from '../../models/app.model';
 
 @Component({
@@ -9,7 +10,7 @@ import { AppModel } from '../../models/app.model';
     styleUrls: ['./properties-size.component.scss']
 })
 export class PropertiesSizeComponent implements OnInit {
-    constructor(private appModel: AppModel, private messageService: MessageService) { }
+    constructor(private appModel: AppModel, private messageService: MessageService, private utilsService: UtilsService) { }
 
     primitive: Primitive;
 
@@ -21,6 +22,13 @@ export class PropertiesSizeComponent implements OnInit {
 
     update() {
         if (this.appModel.selectedPrimitive) { 
+            this.appModel.selectedPrimitive = this.appModel.selectedPrimitive;
+        }
+    }
+
+    updateOrientation() {
+        if (this.appModel.selectedPrimitive) { 
+            this.utilsService.updateOrientation(<PrimitiveSize>this.appModel.selectedPrimitive);
             this.appModel.selectedPrimitive = this.appModel.selectedPrimitive;
         }
     }

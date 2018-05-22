@@ -167,31 +167,34 @@ export class DrawService {
         }
     }
 
-    drawPrimitive(data: Primitive, context, isGrid?: Boolean) {
-        const xn1 = isGrid? this.appModel.grid * Math.round(data.start.x / this.appModel.grid): data.start.x;
-        const yn1 = isGrid? this.appModel.grid * Math.round(data.start.y / this.appModel.grid): data.start.y;
-        const xn2 = isGrid? this.appModel.grid * Math.round(data.end.x / this.appModel.grid): data.end.x;
-        const yn2 = isGrid? this.appModel.grid * Math.round(data.end.y / this.appModel.grid): data.end.y;
+    drawPrimitive(p: Primitive, context, isGrid?: Boolean) {
+        // swap xy if it is negative to avoid negative values and simplify calculations
+        this.utilsService.swapPositions(p)
+        
+        const xn1 = isGrid? this.appModel.grid * Math.round(p.start.x / this.appModel.grid): p.start.x;
+        const yn1 = isGrid? this.appModel.grid * Math.round(p.start.y / this.appModel.grid): p.start.y;
+        const xn2 = isGrid? this.appModel.grid * Math.round(p.end.x / this.appModel.grid): p.end.x;
+        const yn2 = isGrid? this.appModel.grid * Math.round(p.end.y / this.appModel.grid): p.end.y;
         const x1 = this.appModel.zoom * (this.appModel.offset.x + xn1);
         const y1 = this.appModel.zoom * (this.appModel.offset.y + yn1);
         const x2 = this.appModel.zoom * (this.appModel.offset.x + xn2);
         const y2 = this.appModel.zoom * (this.appModel.offset.y + yn2);
 
-        switch(data.type) {
+        switch(p.type) {
             case Constants.TYPE_LINE:
-                return this.drawLine(x1, y1, x2, y2, data, context);
+                return this.drawLine(x1, y1, x2, y2, p, context);
 
             case Constants.TYPE_RECTANGLE:
-                return this.drawRect(x1, y1, x2, y2, data, context);
+                return this.drawRect(x1, y1, x2, y2, p, context);
 
             case Constants.TYPE_PEN:
-                return this.drawPen(x1, y1, x2, y2, data, context);
+                return this.drawPen(x1, y1, x2, y2, p, context);
 
             case Constants.TYPE_ARC:
-                return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), data, context);
+                return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), p, context);
 
             case Constants.TYPE_SIZE:
-                return this.drawSize(x1, y1, x2, y2, data, context);
+                return this.drawSize(x1, y1, x2, y2, p, context);
 
         }
     }

@@ -245,6 +245,115 @@ export class UtilsService {
         };
     }
 
+    swapSizePositions = (sp: PrimitiveSize): Boolean => {
+        if (sp.type == Constants.ORIENTATION_HORIZONTAL) {
+            if (sp.start.x > sp.end.x) {
+                const tp = sp.start;
+                sp.start = sp.end;
+                sp.end = tp;
+
+                const r = sp.ref1;
+                sp.ref1 = sp.ref2;
+                sp.ref2 = r;
+                return true;
+            }
+        } else if (sp.type == Constants.ORIENTATION_VERTICAL) {
+            if (sp.start.y > sp.end.y) {
+                const tp = sp.start;
+                sp.start = sp.end;
+                sp.end = tp;
+
+                const r = sp.ref1;
+                sp.ref1 = sp.ref2;
+                sp.ref2 = r;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    swapPositions = (p: Primitive) => {
+        if (p.type == Constants.TYPE_SIZE) {
+            this.swapSizePositions(<PrimitiveSize>p);
+        }
+    }
+
+    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
+        // supported: 1.line to other line case 2.rect to the same rect 
+        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id)
+            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id))
+            return undefined;
+
+        // calculate middle of the line
+        const getLineCenter = (r: Primitive) => {
+            return <Point> {
+                x: (r.start.x < r.end.x)? r.start.x: r.end.x + Math.abs(r.end.x - r.start.x) / 2,
+                y: (r.start.y < r.end.y)? r.start.y: r.end.y + Math.abs(r.end.y - r.start.y) / 2,
+            }
+        }
+
+        // calculate middle of left line
+        const getRectLeft = (r: Primitive) => {
+            return <Point> {
+                x: (r.start.x < r.end.x)? r.start.x: r.end.x,
+                y: (r.start.y < r.end.y)? r.start.y: r.end.y + Math.abs(r.end.y - r.start.y) / 2,
+            }
+        }
+
+        // calculate middle of right line
+        const getRectRight = (r: Primitive) => {
+            return <Point> {
+                x: (r.start.x < r.end.x)? r.end.x: r.start.x,
+                y: (r.start.y < r.end.y)? r.end.y: r.start.y + Math.abs(r.end.y - r.start.y) / 2,
+            }
+        }
+
+        // calculate end point
+        const getStart = (r: Primitive) => {
+            if (r.type == Constants.TYPE_LINE) {
+                return getLineCenter(r);
+            } else if (r.type == Constants.TYPE_RECTANGLE) {
+                return getRectLeft(r);
+            }
+        }
+
+        // calculate end point
+        const getEnd = (r: Primitive) => {
+            if (r.type == Constants.TYPE_LINE) {
+                return getLineCenter(r);
+            } else if (r.type == Constants.TYPE_RECTANGLE) {
+                return getRectRight(r);
+            }
+        }
+
+        const ps = <PrimitiveSize> {
+            'id': Date.now().toString(),
+            'type': Constants.TYPE_SIZE,
+            'start': getStart(ref1),
+            'end': getEnd(ref2),
+            'ref1': ref1.id,
+            'ref2': ref2.id,
+            'orientation': Constants.ORIENTATION_HORIZONTAL
+        }
+        if (!ref1.references) {
+            ref1.references = new Array<string>();
+        }
+        ref1.references.push(ps.id);
+        if (!ref2.references) {
+            ref2.references = new Array<string>();
+        }
+        ref2.references.push(ps.id);
+
+        this.moveSizePrimitive(ps, PointType.EndPoint, end);
+        this.swapSizePositions(ps);
+        
+
+        this.appModel.selectedPrimitive = ps;
+        this.appModel.data.set(ps.id, ps);
+
+        return ps;
+    }
+
     //Factory to create primitives
     createPrimitive(type: string | undefined, point: Point): Primitive | undefined {
         switch (type) {
@@ -279,75 +388,6 @@ export class UtilsService {
                 return undefined;
 
         }
-    }
-
-    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
-        // supported: 1.line to other line case 2.rect to the same rect 
-        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id)
-            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id))
-            return undefined;
-
-        // swap position if  x1 > x2
-        const isSwap = start.x > end.x;
-        const r1 = isSwap? ref2: ref1;
-        const r2 = isSwap? ref1: ref2;
-
-        // calculate start point
-        const getStart = (r: Primitive) => {
-            if (r.type == Constants.TYPE_LINE) {
-                return <Point> {
-                    x: r.start.x + (r.end.x - r.start.x) / 2,
-                    y: r.start.y + (r.end.y - r.start.y) / 2,
-                }
-            } else if (r.type == Constants.TYPE_RECTANGLE) {
-                return <Point> {
-                    x: r.start.x,
-                    y: r.start.y + (r.end.y - r.start.y) / 2,
-                }
-            }
-        }
-        // calculate end point
-        const getEnd = (r: Primitive) => {
-            if (r.type == Constants.TYPE_LINE) {
-                return <Point> {
-                    x: r.start.x + (r.end.x - r.start.x) / 2,
-                    y: r.start.y + (r.end.y - r.start.y) / 2,
-                }
-            } else if (r.type == Constants.TYPE_RECTANGLE) {
-                return <Point> {
-                    x: r.end.x,
-                    y: r.start.y + (r.end.y - r.start.y) / 2,
-                }
-            }
-        }
-
-        const startPoint = getStart(r1);
-        const endPoint = getEnd(r2);
-
-        const ps = <PrimitiveSize> {
-            'id': Date.now().toString(),
-            'type': Constants.TYPE_SIZE,
-            'start': getStart(r1),
-            'end': getEnd(r2),
-            'ref1': r1.id,
-            'ref2': r2.id,
-            'orientation': Constants.ORIENTATION_HORIZONTAL
-        }
-        if (!ref1.references) {
-            ref1.references = new Array<string>();
-        }
-        ref1.references.push(ps.id);
-        if (!ref2.references) {
-            ref2.references = new Array<string>();
-        }
-        ref2.references.push(ps.id);
-
-        this.moveSizePrimitive(ps, isSwap? PointType.StartPoint: PointType.EndPoint, end);
-
-        this.appModel.selectedPrimitive = ps;
-        this.appModel.data.set(ps.id, ps);
-
-        return ps;
     }
 
     //addPrimitive
@@ -442,6 +482,13 @@ export class UtilsService {
                     ps.end.y = p.y;
                 }
             }
+        }
+    }
+
+    updateOrientation = (ps: PrimitiveSize) => {
+        const r1 = this.appModel.data.get(ps.ref1);
+        const r2 = this.appModel.data.get(ps.ref2);
+        if (r1 && r2) {
         }
     }
 
