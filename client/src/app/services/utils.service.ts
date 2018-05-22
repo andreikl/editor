@@ -59,42 +59,21 @@ export class UtilsService {
 
     // check if elipse close enough to point
     testEllipse(a: Point, b: Point, point: Point, context?: any) {
-        // the biggest radius
-        const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
-        // the smallest radius
-        const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
-
-        // makes center of ellipse be the center of axis
-        const dc:Point = {
-            'x': point.x - a.x,
-            'y': point.y - a.y };
-
-        // calculates the intersection between line from center of ellipse and point and ellipse
-        // line equation y = y0 / x0 * x
-        // ellipse equation x * x / e0 * e0 + y * y / e1 * e1 = 1
-        let d:Point = {
-            'x': e0 * e1 / Math.sqrt(e0 * e0 * dc.y * dc.y + e1 * e1 * dc.x * dc.x) * dc.x,
-            'y': e0 * e1 / Math.sqrt(e0 * e0 * dc.y * dc.y + e1 * e1 * dc.x * dc.x) * dc.y
-        };
-        // translates intersection to scene axis
-        d = {
-            'x': d.x + a.x,
-            'y': d.y + a.y
-        };
+        const d = this.getClosestEllipsePoint(a, b, point);
 
         if (context) {
             point = this.fromNormal(point);
-            d = this.fromNormal(d);
+            const d1 = this.fromNormal(d);
 
             //draw projection line
             context.beginPath();
             context.moveTo(point.x, point.y);
-            context.lineTo(d.x, d.y);
+            context.lineTo(d1.x, d1.y);
             context.stroke();
         }
 
-        const xd = point.x  - d.x;
-        const yd = point.y  - d.y
+        const xd = point.x - d.x;
+        const yd = point.y - d.y
         const dist = xd * xd + yd * yd;
 
         const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
@@ -203,6 +182,32 @@ export class UtilsService {
         }
     }
 
+    getClosestEllipsePoint(a: Point, b: Point, point: Point) {
+        // the biggest radius
+        const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
+        // the smallest radius
+        const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
+
+        // makes center of ellipse be the center of axis
+        const dc:Point = {
+            'x': point.x - a.x,
+            'y': point.y - a.y };
+
+        // calculates the intersection between line from center of ellipse and point
+        // line equation y = y0 / x0 * x
+        // ellipse equation x * x / e0 * e0 + y * y / e1 * e1 = 1
+        let d:Point = {
+            'x': e0 * e1 / Math.sqrt(e0 * e0 * dc.y * dc.y + e1 * e1 * dc.x * dc.x) * dc.x,
+            'y': e0 * e1 / Math.sqrt(e0 * e0 * dc.y * dc.y + e1 * e1 * dc.x * dc.x) * dc.y
+        };
+        // translates intersection to scene axis
+        d = {
+            'x': d.x + a.x,
+            'y': d.y + a.y
+        };
+        return d;
+    }
+
     // return point of primitive
     getPrimitivePoint(o: Primitive, sp: Point) {
         const sc = Constants.SELECTION_CIRCLE;
@@ -292,50 +297,16 @@ export class UtilsService {
     }
 
     createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
-        // supported: 1.line to other line case 2.rect to the same rect 
-        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id)
-            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id))
+        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id) // 1. line to other line case 
+            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id) // 2. rect to the same rect 
+            && (ref1.type != Constants.TYPE_ARC || ref2.type != Constants.TYPE_ARC || ref1.id != ref2.id)) // 3. arc to the same arc
             return undefined;
-
-        // calculate middle of left line
-        const getRectLeft = (r: Primitive) => {
-            return <Point> {
-                x: (r.start.x < r.end.x)? r.start.x: r.end.x,
-                y: (r.start.y < r.end.y)? r.start.y: r.end.y + Math.abs(r.end.y - r.start.y) / 2,
-            }
-        }
-
-        // calculate middle of right line
-        const getRectRight = (r: Primitive) => {
-            return <Point> {
-                x: (r.start.x < r.end.x)? r.end.x: r.start.x,
-                y: (r.start.y < r.end.y)? r.end.y: r.start.y + Math.abs(r.end.y - r.start.y) / 2,
-            }
-        }
-
-        // calculate end point
-        const getStart = (r: Primitive) => {
-            if (r.type == Constants.TYPE_LINE) {
-                return this.getLineCenter(r.start, r.end);
-            } else if (r.type == Constants.TYPE_RECTANGLE) {
-                return getRectLeft(r);
-            }
-        }
-
-        // calculate end point
-        const getEnd = (r: Primitive) => {
-            if (r.type == Constants.TYPE_LINE) {
-                return this.getLineCenter(r.start, r.end);
-            } else if (r.type == Constants.TYPE_RECTANGLE) {
-                return getRectRight(r);
-            }
-        }
 
         const ps = <PrimitiveSize> {
             'id': Date.now().toString(),
             'type': Constants.TYPE_SIZE,
-            'start': getStart(ref1),
-            'end': getEnd(ref2),
+            'start': this.clone(ref1.start, false),
+            'end': this.clone(ref2.end, false),
             'ref1': ref1.id,
             'ref2': ref2.id,
             'orientation': Constants.ORIENTATION_HORIZONTAL
@@ -521,6 +492,17 @@ export class UtilsService {
                         ps.start.y = y;
                         ps.end.x = p.x;
                         ps.end.y = p.y;
+                    }
+                }
+            } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id == r2.id) { // arc to the same arc case
+                const p = this.getClosestEllipsePoint(r1.start, r1.end, point);
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    if (pt == PointType.StartPoint) {
+                    } else {
+                    }
+                } else {
+                    if (pt == PointType.StartPoint) {
+                    } else {
                     }
                 }
             }
