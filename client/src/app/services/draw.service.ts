@@ -112,24 +112,45 @@ export class DrawService {
         context.stroke();
     }
 
-    drawSize(x1, y1, x2, y2, data, context) {
+    drawSize(x1, y1, x2, y2, ps: PrimitiveSize, context) {
         context.beginPath();
         context.font = Constants.SELECTION_CIRCLE + "px Arial";
         context.moveTo(x1, y1);
         context.lineTo(x2, y2);
 
-        const text = (data.end.x - data.start.x).toFixed(2);
-        const textWidth = context.measureText(text).width / 2;
+        const angle = Math.PI / 18;
+        const cospl = Constants.SELECTION_CIRCLE * Math.cos(angle);
+        const sinpl = Constants.SELECTION_CIRCLE * Math.sin(angle);
+        const cosmi = Constants.SELECTION_CIRCLE * Math.cos(-angle);
+        const sinmi = Constants.SELECTION_CIRCLE * Math.sin(-angle);
 
-        context.moveTo(x1, y1);
-        context.lineTo(x1 + 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-        context.moveTo(x1, y1);
-        context.lineTo(x1 + 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y1 + 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-        context.moveTo(x2, y2);
-        context.lineTo(x2 - 20 * Math.cos(Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(Math.PI / Constants.SELECTION_CIRCLE));
-        context.moveTo(x2, y2);
-        context.lineTo(x2 - 20 * Math.cos(-Math.PI / Constants.SELECTION_CIRCLE), y2 - 20 * Math.sin(-Math.PI / Constants.SELECTION_CIRCLE));
-        context.fillText(text, x1 + Math.abs((x2 - x1) / 2) - textWidth, y1 - 2);
+        if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+            const text = (ps.end.x - ps.start.x).toFixed(2);
+            const textWidth = context.measureText(text).width / 2;
+    
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + cospl, y1 + sinpl);
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + cosmi, y1 + sinmi);
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - cospl, y2 - sinpl);
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - cosmi, y2 - sinmi);
+            context.fillText(text, x1 + Math.abs((x2 - x1) / 2) - textWidth, y1 - 2);
+        } else {
+            const text = (ps.end.y - ps.start.y).toFixed(2);
+            const textHeight = Constants.SELECTION_CIRCLE / 2;
+    
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + sinpl, y1 + cospl);
+            context.moveTo(x1, y1);
+            context.lineTo(x1 + sinmi, y1 + cosmi);
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - sinpl, y2 - cospl);
+            context.moveTo(x2, y2);
+            context.lineTo(x2 - sinmi, y2 - cosmi);
+            context.fillText(text, x1 + 2, y1 + Math.abs((y2 - y1) / 2) + textHeight);
+        }
         context.stroke();
     }
 
@@ -168,9 +189,6 @@ export class DrawService {
     }
 
     drawPrimitive(p: Primitive, context, isGrid?: Boolean) {
-        // swap xy if it is negative to avoid negative values and simplify calculations
-        this.utilsService.swapPositions(p)
-        
         const xn1 = isGrid? this.appModel.grid * Math.round(p.start.x / this.appModel.grid): p.start.x;
         const yn1 = isGrid? this.appModel.grid * Math.round(p.start.y / this.appModel.grid): p.start.y;
         const xn2 = isGrid? this.appModel.grid * Math.round(p.end.x / this.appModel.grid): p.end.x;
@@ -194,7 +212,7 @@ export class DrawService {
                 return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), p, context);
 
             case Constants.TYPE_SIZE:
-                return this.drawSize(x1, y1, x2, y2, p, context);
+                return this.drawSize(x1, y1, x2, y2, <PrimitiveSize>p, context);
 
         }
     }

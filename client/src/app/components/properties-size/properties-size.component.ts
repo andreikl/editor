@@ -16,7 +16,7 @@ export class PropertiesSizeComponent implements OnInit {
 
     ngOnInit() {
         if (this.appModel.selectedPrimitive) {
-            this.primitive = this.appModel.selectedPrimitive;
+            this.primitive = <Primitive>this.appModel.selectedPrimitive;
         }
     }
 
@@ -28,7 +28,7 @@ export class PropertiesSizeComponent implements OnInit {
 
     updateOrientation() {
         if (this.appModel.selectedPrimitive) { 
-            this.utilsService.updateOrientation(<PrimitiveSize>this.appModel.selectedPrimitive);
+            this.utilsService.updateSizeOrientation(<PrimitiveSize>this.appModel.selectedPrimitive);
             this.appModel.selectedPrimitive = this.appModel.selectedPrimitive;
         }
     }

@@ -29,12 +29,32 @@ export class UtilsService {
 
     getXofLine(a: Point, b: Point, y: number) {
         //(x2-x1)*(y-y1)=(y2-y1)*(x-x1)
+        //ab.x*(y-y1)=ab.y*(x-x1)
         //ab.x*(y-y1)/ab.y+x1=x
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
         }
         return ab.x * (y - a.y) / ab.y + a.x;
+    }
+
+    getYofLine(a: Point, b: Point, x: number) {
+        //(x2-x1)*(y-y1)=(y2-y1)*(x-x1)
+        //ab.x*(y-y1)=ab.y*(x-x1)
+        //y=ab.y*(x-x1)/ab.x+y1
+        const ab = {
+            'x': b.x - a.x,
+            'y': b.y - a.y,
+        }
+        return ab.y * (x - a.x) / ab.x + a.y;
+    }
+
+    // calculate middle of the line
+    getLineCenter = (start: Point, end: Point) => {
+        return <Point> {
+            x: ((start.x < end.x)? start.x: end.x) + Math.abs(end.x - start.x) / 2,
+            y: ((start.y < end.y)? start.y: end.y) + Math.abs(end.y - start.y) / 2,
+        }
     }
 
     // check if elipse close enough to point
@@ -47,8 +67,7 @@ export class UtilsService {
         // makes center of ellipse be the center of axis
         const dc:Point = {
             'x': point.x - a.x,
-            'y': point.y - a.y
-        };
+            'y': point.y - a.y };
 
         // calculates the intersection between line from center of ellipse and point and ellipse
         // line equation y = y0 / x0 * x
@@ -246,7 +265,7 @@ export class UtilsService {
     }
 
     swapSizePositions = (sp: PrimitiveSize): Boolean => {
-        if (sp.type == Constants.ORIENTATION_HORIZONTAL) {
+        if (sp.orientation == Constants.ORIENTATION_HORIZONTAL) {
             if (sp.start.x > sp.end.x) {
                 const tp = sp.start;
                 sp.start = sp.end;
@@ -257,7 +276,7 @@ export class UtilsService {
                 sp.ref2 = r;
                 return true;
             }
-        } else if (sp.type == Constants.ORIENTATION_VERTICAL) {
+        } else if (sp.orientation == Constants.ORIENTATION_VERTICAL) {
             if (sp.start.y > sp.end.y) {
                 const tp = sp.start;
                 sp.start = sp.end;
@@ -272,25 +291,11 @@ export class UtilsService {
         return false;
     }
 
-    swapPositions = (p: Primitive) => {
-        if (p.type == Constants.TYPE_SIZE) {
-            this.swapSizePositions(<PrimitiveSize>p);
-        }
-    }
-
     createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
         // supported: 1.line to other line case 2.rect to the same rect 
         if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id)
             && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id))
             return undefined;
-
-        // calculate middle of the line
-        const getLineCenter = (r: Primitive) => {
-            return <Point> {
-                x: (r.start.x < r.end.x)? r.start.x: r.end.x + Math.abs(r.end.x - r.start.x) / 2,
-                y: (r.start.y < r.end.y)? r.start.y: r.end.y + Math.abs(r.end.y - r.start.y) / 2,
-            }
-        }
 
         // calculate middle of left line
         const getRectLeft = (r: Primitive) => {
@@ -311,7 +316,7 @@ export class UtilsService {
         // calculate end point
         const getStart = (r: Primitive) => {
             if (r.type == Constants.TYPE_LINE) {
-                return getLineCenter(r);
+                return this.getLineCenter(r.start, r.end);
             } else if (r.type == Constants.TYPE_RECTANGLE) {
                 return getRectLeft(r);
             }
@@ -320,7 +325,7 @@ export class UtilsService {
         // calculate end point
         const getEnd = (r: Primitive) => {
             if (r.type == Constants.TYPE_LINE) {
-                return getLineCenter(r);
+                return this.getLineCenter(r.start, r.end);
             } else if (r.type == Constants.TYPE_RECTANGLE) {
                 return getRectRight(r);
             }
@@ -442,20 +447,39 @@ export class UtilsService {
         if (r1 && r2) {
             // line to other line case
             if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) {
-                if (pt == PointType.StartPoint) {
-                    const p = this.getClosestLinePoint(r1.start, r1.end, point);
-                    const x = this.getXofLine(r2.start, r2.end, p.y);
-                    ps.start.x = p.x;
-                    ps.start.y = p.y;
-                    ps.end.x = x;
-                    ps.end.y = p.y;
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    if (pt == PointType.StartPoint) {
+                        const p = this.getClosestLinePoint(r1.start, r1.end, point);
+                        const x = this.getXofLine(r2.start, r2.end, p.y);
+                        ps.start.x = p.x;
+                        ps.start.y = p.y;
+                        ps.end.x = x;
+                        ps.end.y = p.y;
+                    } else {
+                        const p = this.getClosestLinePoint(r2.start, r2.end, point);
+                        const x = this.getXofLine(r1.start, r1.end, p.y);
+                        ps.start.x = x;
+                        ps.start.y = p.y;
+                        ps.end.x = p.x;
+                        ps.end.y = p.y;
+                    }
                 } else {
-                    const p = this.getClosestLinePoint(r2.start, r2.end, point);
-                    const x = this.getXofLine(r1.start, r1.end, p.y);
-                    ps.start.x = x;
-                    ps.start.y = p.y;
-                    ps.end.x = p.x;
-                    ps.end.y = p.y;
+                    if (pt == PointType.StartPoint) {
+                        const p = this.getClosestLinePoint(r1.start, r1.end, point);
+                        const y = this.getYofLine(r2.start, r2.end, p.x);
+                        ps.start.x = p.x;
+                        ps.start.y = p.y;
+                        ps.end.x = p.x;
+                        ps.end.y = y;
+                    } else {
+                        const p = this.getClosestLinePoint(r2.start, r2.end, point);
+                        const y = this.getYofLine(r1.start, r1.end, p.x);
+                        ps.start.x = p.x;
+                        ps.start.y = y;
+                        ps.end.x = p.x;
+                        ps.end.y = p.y;
+                    }
+                   
                 }
             } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id == r2.id) { // rect to the same rect case
                 const leftBottom = {
@@ -466,29 +490,98 @@ export class UtilsService {
                     'x': r1.end.x,
                     'y': r1.start.y,
                 };
-                if (pt == PointType.StartPoint) {
-                    const p = this.getClosestLinePoint(r1.start, leftBottom, point);
-                    const x = this.getXofLine(rightTop, r2.end, p.y);
-                    ps.start.x = p.x;
-                    ps.start.y = p.y;
-                    ps.end.x = x;
-                    ps.end.y = p.y;
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    if (pt == PointType.StartPoint) {
+                        const p = this.getClosestLinePoint(r1.start, leftBottom, point);
+                        const x = this.getXofLine(rightTop, r1.end, p.y);
+                        ps.start.x = p.x;
+                        ps.start.y = p.y;
+                        ps.end.x = x;
+                        ps.end.y = p.y;
+                    } else {
+                        const p = this.getClosestLinePoint(rightTop, r1.end, point);
+                        const x = this.getXofLine(r1.start, leftBottom, p.y);
+                        ps.start.x = x;
+                        ps.start.y = p.y;
+                        ps.end.x = p.x;
+                        ps.end.y = p.y;
+                    }
                 } else {
-                    const p = this.getClosestLinePoint(rightTop, r2.end, point);
-                    const x = this.getXofLine(r1.start, leftBottom, p.y);
-                    ps.start.x = x;
-                    ps.start.y = p.y;
-                    ps.end.x = p.x;
-                    ps.end.y = p.y;
+                    if (pt == PointType.StartPoint) {
+                        const p = this.getClosestLinePoint(r1.start, rightTop, point);
+                        const y = this.getYofLine(leftBottom, r1.end, p.x);
+                        ps.start.x = p.x;
+                        ps.start.y = p.y;
+                        ps.end.x = p.x;
+                        ps.end.y = y;
+                    } else {
+                        const p = this.getClosestLinePoint(leftBottom, r1.end, point);
+                        const y = this.getYofLine(r1.start, rightTop, p.x);
+                        ps.start.x = p.x;
+                        ps.start.y = y;
+                        ps.end.x = p.x;
+                        ps.end.y = p.y;
+                    }
                 }
             }
         }
     }
 
-    updateOrientation = (ps: PrimitiveSize) => {
+    updateSizeOrientation = (ps: PrimitiveSize) => {
         const r1 = this.appModel.data.get(ps.ref1);
         const r2 = this.appModel.data.get(ps.ref2);
         if (r1 && r2) {
+            const point = this.getLineCenter(ps.start, ps.end);
+            // line to other line case
+            if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) {
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    // first point
+                    const x1 = this.getXofLine(r1.start, r1.end, point.y);
+                    ps.start.x = x1;
+                    ps.start.y = point.y;
+                    // second point
+                    const x2 = this.getXofLine(r2.start, r2.end, point.y);
+                    ps.end.x = x2;
+                    ps.end.y = point.y;
+                } else {
+                    // first point
+                    const y1 = this.getYofLine(r1.start, r1.end, point.x);
+                    ps.start.x = point.x;
+                    ps.start.y = y1;
+                    // second point
+                    const y2 = this.getYofLine(r2.start, r2.end, point.x);
+                    ps.end.x = point.x;
+                    ps.end.y = y2;
+                }
+            } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id == r2.id) { // rect to the same rect case
+                const leftBottom = {
+                    'x': r1.start.x,
+                    'y': r1.end.y,
+                };
+                const rightTop = {
+                    'x': r1.end.x,
+                    'y': r1.start.y,
+                };
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    // first point
+                    const x1 = this.getXofLine(r1.start, leftBottom, point.y);
+                    ps.start.x = x1;
+                    ps.start.y = point.y;
+                    // second point
+                    const x2 = this.getXofLine(rightTop, r1.end, point.y);
+                    ps.end.x = x2;
+                    ps.end.y = point.y;
+                } else {
+                    // first point
+                    const y1 = this.getYofLine(r1.start, rightTop, point.x);
+                    ps.start.x = point.x;
+                    ps.start.y = y1;
+                    // second point
+                    const y2 = this.getYofLine(leftBottom, r1.end, point.x);
+                    ps.end.x = point.x;
+                    ps.end.y = y2;
+                }
+            }
         }
     }
 

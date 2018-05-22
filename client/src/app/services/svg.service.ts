@@ -94,6 +94,8 @@ export class SvgService {
 
                 case Constants.TYPE_SIZE:
                 {
+                    const ps = <PrimitiveSize>o;
+
                     const angle = Math.PI / 18;
                     const rx = Math.abs(o.end.x - o.start.x);
                     const ry = Math.abs(o.end.y - o.start.y);
@@ -103,22 +105,41 @@ export class SvgService {
                     const cosmi = Constants.SELECTION_CIRCLE * Math.cos(-angle);
                     const sinmi = Constants.SELECTION_CIRCLE * Math.sin(-angle);
 
-                    return '<path id="' + o.id + '" d="' +
-                        ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
-                        ' L' + (o.start.x + cospl).toFixed(2) + ' ' + (o.start.y + sinpl).toFixed(2) +
-                        ' L' + (o.start.x + cosmi).toFixed(2) + ' ' + (o.start.y + sinmi).toFixed(2) +
-                        ' L' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
-                        ' Z' +
-                        ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
-                        ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
-                        ' Z' +
-                        ' M' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
-                        ' L' + (o.end.x - cospl).toFixed(2) + ' ' + (o.end.y - sinpl).toFixed(2) +
-                        ' L' + (o.end.x - cosmi).toFixed(2) + ' ' + (o.end.y - sinmi).toFixed(2) +
-                        ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
-                        ' Z' +
-                        '" stroke-width="0.1" stroke="#000000" />\n'+
-                        '<text x="' + (o.start.x + rx / 2).toFixed(2) + '" y="' + (o.start.y - 2).toFixed(2) + '" class="text">' + rx.toFixed(2) + '</text>';
+                    if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                        return '<path id="' + o.id + '" d="' +
+                            ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' L' + (o.start.x + cospl).toFixed(2) + ' ' + (o.start.y + sinpl).toFixed(2) +
+                            ' L' + (o.start.x + cosmi).toFixed(2) + ' ' + (o.start.y + sinmi).toFixed(2) +
+                            ' L' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' Z' +
+                            ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' Z' +
+                            ' M' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' L' + (o.end.x - cospl).toFixed(2) + ' ' + (o.end.y - sinpl).toFixed(2) +
+                            ' L' + (o.end.x - cosmi).toFixed(2) + ' ' + (o.end.y - sinmi).toFixed(2) +
+                            ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' Z' +
+                            '" stroke-width="0.1" stroke="#000000" />\n'+
+                            '<text x="' + (o.start.x + rx / 2).toFixed(2) + '" y="' + (o.start.y - 2).toFixed(2) + '" class="text">' + rx.toFixed(2) + '</text>';
+                    } else {
+                        return '<path id="' + o.id + '" d="' +
+                            ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' L' + (o.start.x + sinpl).toFixed(2) + ' ' + (o.start.y + cospl).toFixed(2) +
+                            ' L' + (o.start.x + sinmi).toFixed(2) + ' ' + (o.start.y + cosmi).toFixed(2) +
+                            ' L' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' Z' +
+                            ' M' + o.start.x.toFixed(2) + ' ' + o.start.y.toFixed(2) +
+                            ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' Z' +
+                            ' M' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' L' + (o.end.x - sinpl).toFixed(2) + ' ' + (o.end.y - cospl).toFixed(2) +
+                            ' L' + (o.end.x - sinmi).toFixed(2) + ' ' + (o.end.y - cosmi).toFixed(2) +
+                            ' L' + o.end.x.toFixed(2) + ' ' + o.end.y.toFixed(2) +
+                            ' Z' +
+                            '" stroke-width="0.1" stroke="#000000" />\n'+
+                            '<text x="' + (o.start.x + 2).toFixed(2) + '" y="' + (o.start.y + ry / 2).toFixed(2) + '" class="text">' + ry.toFixed(2) + '</text>';
+                    }
                 }
 
                 case Constants.TYPE_ARC:
