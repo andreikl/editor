@@ -49,6 +49,34 @@ export class UtilsService {
         return ab.y * (x - a.x) / ab.x + a.y;
     }
 
+    getXOfEllipse(a: Point, b: Point, y: number): Point {
+        // the biggest radius
+        const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
+        console.log('e0: ' + e0);
+
+        // the smallest radius
+        const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
+        console.log('e1: ' + e0);
+
+        // makes center of ellipse be the center of axis
+        const cy = y - a.y;
+        //console.log('cy: ' + cy);
+
+        // calculates the intersection between line from center of ellipse and point
+        // line equation y = y0 / x0 * x
+        // ellipse equation x * x / e0 * e0 + y * y / e1 * e1 = 1
+        // x = e0 * sqrt(1 - y * y / e1 * e1))
+        const a1 = 1 - (cy * cy) / (e1 * e1);
+        //console.log('a1: ' + a1);
+        //console.log('y: ' + e0 * Math.sqrt(a1));
+        const cx = e0 * Math.sqrt(a1);
+        // translates intersection to scene axis
+        return {
+            'x': -cx + a.x,
+            'y': cx + a.x
+        }
+    }
+
     // calculate middle of the line
     getLineCenter = (start: Point, end: Point) => {
         return <Point> {
@@ -191,7 +219,8 @@ export class UtilsService {
         // makes center of ellipse be the center of axis
         const dc:Point = {
             'x': point.x - a.x,
-            'y': point.y - a.y };
+            'y': point.y - a.y
+        };
 
         // calculates the intersection between line from center of ellipse and point
         // line equation y = y0 / x0 * x
@@ -496,10 +525,14 @@ export class UtilsService {
                 }
             } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id == r2.id) { // arc to the same arc case
                 const p = this.getClosestEllipsePoint(r1.start, r1.end, point);
+                console.log("ellipse closest points: ", p);
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
-                    if (pt == PointType.StartPoint) {
-                    } else {
-                    }
+                    const xx = this.getXOfEllipse(r1.start, r1.end, p.y);
+                    console.log("ellipse points:", xx);
+                    ps.start.x = xx.x;
+                    ps.start.y = p.y;
+                    ps.end.x = xx.y;
+                    ps.end.y = p.y;
                 } else {
                     if (pt == PointType.StartPoint) {
                     } else {
