@@ -50,20 +50,21 @@ export class UtilsService {
     }
 
     getXOfEllipse(a: Point, b: Point, y: number): Point {
-        // the biggest radius
-        const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
-        console.log('e0: ' + e0);
+        // the x radius
+        const e0 = Math.abs(b.x - a.x);
+        //const e0 = Math.abs(b.x - a.x);
+        //console.log('e0: ' + e0);
 
-        // the smallest radius
-        const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
-        console.log('e1: ' + e0);
+        // the y radius
+        const e1 = Math.abs(b.y - a.y);
+        //const e1 = Math.abs(b.y - a.y);
+        //console.log('e1: ' + e0);
 
         // makes center of ellipse be the center of axis
         const cy = y - a.y;
         //console.log('cy: ' + cy);
 
         // calculates the intersection between line from center of ellipse and point
-        // line equation y = y0 / x0 * x
         // ellipse equation x * x / e0 * e0 + y * y / e1 * e1 = 1
         // x = e0 * sqrt(1 - y * y / e1 * e1))
         const a1 = 1 - (cy * cy) / (e1 * e1);
@@ -74,6 +75,33 @@ export class UtilsService {
         return {
             'x': -cx + a.x,
             'y': cx + a.x
+        }
+    }
+
+    getYOfEllipse(a: Point, b: Point, x: number): Point {
+        // the x radius
+        const e0 = Math.abs(b.x - a.x);
+        //console.log('e0: ' + e0);
+
+        // the y radius
+        const e1 = Math.abs(b.y - a.y);
+        //console.log('e1: ' + e0);
+
+        // makes center of ellipse be the center of axis
+        const cx = x - a.x;
+        //console.log('cy: ' + cy);
+
+        // calculates the intersection between line from center of ellipse and point
+        // ellipse equation x * x / e0 * e0 + y * y / e1 * e1 = 1
+        // x = e1 * sqrt(1 - x * x / e0 * e0))
+        const a1 = 1 - (cx * cx) / (e0 * e0);
+        //console.log('a1: ' + a1);
+        //console.log('x: ' + e1 * Math.sqrt(a1));
+        const cy = e1 * Math.sqrt(a1);
+        // translates intersection to scene axis
+        return {
+            'x': cy + a.x,
+            'y': -cy + a.x
         }
     }
 
@@ -139,16 +167,14 @@ export class UtilsService {
     }
 
     // check if edge of primitive close enough to point
-    testPrimitive(prim: Primitive, point: Point): boolean {
+    testPrimitive(prim: Primitive, point: Point, context?: any): boolean {
         switch(prim.type) {
             case Constants.TYPE_LINE:
             case Constants.TYPE_SIZE:
                 return this.testLine(prim.start, prim.end, point);
 
             case Constants.TYPE_ARC:
-                //const canvas = this.canvas.nativeElement;
-                //const context = canvas.getContext("2d");
-                return this.testEllipse(prim.start, prim.end, point);
+                return this.testEllipse(prim.start, prim.end, point, context);
 
             case Constants.TYPE_RECTANGLE:
                 return this.testLine(prim.start, {
@@ -212,9 +238,15 @@ export class UtilsService {
 
     getClosestEllipsePoint(a: Point, b: Point, point: Point) {
         // the biggest radius
-        const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
+        //const e0 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.x - a.x): Math.abs(b.y - a.y);
+        // the x radius
+        const e0 = Math.abs(b.x - a.x);
+        //console.log('e1: ' + e0);
         // the smallest radius
-        const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
+        //const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
+        // the y radius
+        const e1 = Math.abs(b.y - a.y);
+        console.log('e0: ' + e1);
 
         // makes center of ellipse be the center of axis
         const dc:Point = {
@@ -534,70 +566,20 @@ export class UtilsService {
                     ps.end.x = xx.y;
                     ps.end.y = p.y;
                 } else {
-                    if (pt == PointType.StartPoint) {
-                    } else {
-                    }
+                    const yy = this.getYOfEllipse(r1.start, r1.end, p.x);
+                    console.log("ellipse points:", yy);
+                    ps.start.x = p.x;
+                    ps.start.y = yy.x;
+                    ps.end.x = p.x;
+                    ps.end.y = yy.y;
                 }
             }
         }
     }
 
     updateSizeOrientation = (ps: PrimitiveSize) => {
-        const r1 = this.appModel.data.get(ps.ref1);
-        const r2 = this.appModel.data.get(ps.ref2);
-        if (r1 && r2) {
-            const point = this.getLineCenter(ps.start, ps.end);
-            // line to other line case
-            if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) {
-                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
-                    // first point
-                    const x1 = this.getXofLine(r1.start, r1.end, point.y);
-                    ps.start.x = x1;
-                    ps.start.y = point.y;
-                    // second point
-                    const x2 = this.getXofLine(r2.start, r2.end, point.y);
-                    ps.end.x = x2;
-                    ps.end.y = point.y;
-                } else {
-                    // first point
-                    const y1 = this.getYofLine(r1.start, r1.end, point.x);
-                    ps.start.x = point.x;
-                    ps.start.y = y1;
-                    // second point
-                    const y2 = this.getYofLine(r2.start, r2.end, point.x);
-                    ps.end.x = point.x;
-                    ps.end.y = y2;
-                }
-            } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id == r2.id) { // rect to the same rect case
-                const leftBottom = {
-                    'x': r1.start.x,
-                    'y': r1.end.y,
-                };
-                const rightTop = {
-                    'x': r1.end.x,
-                    'y': r1.start.y,
-                };
-                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
-                    // first point
-                    const x1 = this.getXofLine(r1.start, leftBottom, point.y);
-                    ps.start.x = x1;
-                    ps.start.y = point.y;
-                    // second point
-                    const x2 = this.getXofLine(rightTop, r1.end, point.y);
-                    ps.end.x = x2;
-                    ps.end.y = point.y;
-                } else {
-                    // first point
-                    const y1 = this.getYofLine(r1.start, rightTop, point.x);
-                    ps.start.x = point.x;
-                    ps.start.y = y1;
-                    // second point
-                    const y2 = this.getYofLine(leftBottom, r1.end, point.x);
-                    ps.end.x = point.x;
-                    ps.end.y = y2;
-                }
-            }
-        }
+        const point = this.getLineCenter(ps.start, ps.end);
+        this.moveSizePrimitive(ps, PointType.StartPoint, point);
     }
 
     private dotProduction(x: Point, y: Point) {

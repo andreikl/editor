@@ -301,6 +301,10 @@ export class CanvasComponent implements OnInit {
 
     selectPrimitive(point: Point) {
         this.appModel.selectedPrimitive = Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
+
+        const canvas = this.canvas.nativeElement;
+        const context = canvas.getContext("2d");
+        Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point, context));
     }
 
     drawScene(data: Primitive | null) {
