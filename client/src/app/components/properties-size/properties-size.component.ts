@@ -12,11 +12,11 @@ import { AppModel } from '../../models/app.model';
 export class PropertiesSizeComponent implements OnInit {
     constructor(private appModel: AppModel, private messageService: MessageService, private utilsService: UtilsService) { }
 
-    primitive: Primitive;
+    primitive: PrimitiveSize;
 
     ngOnInit() {
         if (this.appModel.selectedPrimitive) {
-            this.primitive = <Primitive>this.appModel.selectedPrimitive;
+            this.primitive = <PrimitiveSize>this.appModel.selectedPrimitive;
         }
     }
 

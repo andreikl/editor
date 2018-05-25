@@ -100,8 +100,8 @@ export class UtilsService {
         const cy = e1 * Math.sqrt(a1);
         // translates intersection to scene axis
         return {
-            'x': cy + a.x,
-            'y': -cy + a.x
+            'x': cy + a.y,
+            'y': -cy + a.y
         }
     }
 
@@ -557,17 +557,14 @@ export class UtilsService {
                 }
             } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id == r2.id) { // arc to the same arc case
                 const p = this.getClosestEllipsePoint(r1.start, r1.end, point);
-                console.log("ellipse closest points: ", p);
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
                     const xx = this.getXOfEllipse(r1.start, r1.end, p.y);
-                    console.log("ellipse points:", xx);
                     ps.start.x = xx.x;
                     ps.start.y = p.y;
                     ps.end.x = xx.y;
                     ps.end.y = p.y;
                 } else {
                     const yy = this.getYOfEllipse(r1.start, r1.end, p.x);
-                    console.log("ellipse points:", yy);
                     ps.start.x = p.x;
                     ps.start.y = yy.x;
                     ps.end.x = p.x;

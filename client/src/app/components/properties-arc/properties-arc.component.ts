@@ -11,11 +11,11 @@ import { AppModel } from '../../models/app.model';
 export class PropertiesArcComponent implements OnInit {
     constructor(private appModel: AppModel, private messageService: MessageService) { }
 
-    primitive: Primitive;
+    primitive: PrimitiveArc;
 
     ngOnInit() {
         if (this.appModel.selectedPrimitive) {
-            this.primitive = this.appModel.selectedPrimitive;
+            this.primitive = <PrimitiveArc>this.appModel.selectedPrimitive;
         }
     }
 
