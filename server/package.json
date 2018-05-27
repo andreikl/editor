@@ -10,16 +10,23 @@
     "start": "node dist/server.js",
     "local": "set NODE_ENV=localhost&&npm run deploy&&gulp scripts&&npm start"
   },
-  "author": "Andrei Klimchuk <andrew.klimchuk@gmail.com>",
+  "author": "AKA Systems Pty Ltd",
+  "contributors": [
+    {
+      "name": "Andrei Klimchuk",
+      "email": "andrew.klimchuk@gmail.com"
+    }
+  ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "config": "^1.30.0",
+    "hapi": "^17.2.3",
+    "inert": "^5.1.0"
+  },
   "devDependencies": {
     "@types/node": "^9.4.7",
-    "config": "^1.30.0",
     "gulp": "^3.9.1",
     "gulp-typescript": "^4.0.1",
-    "hapi": "^17.2.3",
-    "inert": "^5.1.0",
     "mocha": "^3.2.0",
     "typescript": "^2.7.2"
   }
