@@ -6,7 +6,7 @@ import * as hapi from 'hapi';
 
 const options = {
     host: config.get('server').host, 
-    port: config.get('server').port
+    port: process.env.PORT || config.get('server').port
 };
 let server = hapi.Server(options);
 
