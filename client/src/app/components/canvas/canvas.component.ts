@@ -29,9 +29,6 @@ export class CanvasComponent implements OnInit {
     @ViewChild('canvas')
     canvas: ElementRef;
 
-    // edit state
-    draggablePoint?: PrimitivePoint;
-
     constructor(private appModel: AppModel,
         private messageService: MessageService,
         private drawService: DrawService,
@@ -65,8 +62,9 @@ export class CanvasComponent implements OnInit {
         });
 
         const pointInitiator = (start: Point): Primitive | undefined => {
-            if (this.draggablePoint) { // editing primitive state
-                draggablePoint = this.draggablePoint;
+            const pp = this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, start);
+            if (pp) { // editing primitive state
+                draggablePoint = pp;
                 return draggablePoint.primitive;
             } else if (this.appModel.selectedTool == Constants.TYPE_MOVE) { // moving page state
                 return <Primitive> {
@@ -149,19 +147,69 @@ export class CanvasComponent implements OnInit {
                 return false;
         }
 
+        // handle clicks to select primitive, it isn't moving--------
+        let firstPrimitive;
+        const selectionFinished = (start: Point, end: Point) => {
+            if (isSelectionOrMoving(start, end)) {
+                const point = this.utilsService.toNormal({
+                    'x': start.x + (end.x - start.x) / 2,
+                    'y': start.y + (end.y - start.y) / 2,
+                });
+                this.selectPrimitive(point);
+                if (this.appModel.selectedTool == Constants.TYPE_SIZE) {
+                    if (!firstPrimitive) {
+                        firstPrimitive = this.appModel.selectedPrimitive;
+                    } else if (this.appModel.selectedPrimitive) {
+                        if(this.utilsService.createSizePrimitive(
+                            firstPrimitive.start,
+                            point,
+                            firstPrimitive,
+                            this.appModel.selectedPrimitive,
+                        )) {
+                            this.historyService.snapshoot();
+                        }
+
+                        // clear creation state
+                        this.appModel.selectedTool = firstPrimitive  = undefined;
+                    }
+                } else {
+                    firstPrimitive = undefined;
+                }
+            }
+        };
+
+        let startPoint: Point | undefined; // position of mouse or touch down
+        canvas.onmousedown = (e: MouseEvent)  => {
+            if (e.buttons == 1) {
+                startPoint = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.pageX, e.pageY);
+            }
+        }
+        canvas.onmouseup = (e: MouseEvent)  => {
+            if (startPoint) {
+                selectionFinished(startPoint, this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.pageX, e.pageY));
+            }
+            startPoint = undefined;
+        }
+        canvas.ontouchstart = (e: TouchEvent)  => {
+            startPoint = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.touches[0].pageX, e.touches[0].pageY);
+        }
+        canvas.ontouchend = (e: TouchEvent)  => {
+            if (startPoint) {
+                selectionFinished(startPoint, this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.touches[0].pageX, e.touches[0].pageY));
+            }
+            startPoint = undefined;
+        }
+
         // handle moving to add, edit primitive and etc, it isn't click ----------------
         let movingSubscription; // true if moving event need to be subscribed
-        let startPoint: Point | undefined; // null if right mousedown event need to be stored
         canvas.onmousemove = (event: MouseEvent)  => { //start moving if delta is reached and show move cursor if mouse on point
             const sp = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY);
-            startPoint = (event.buttons == 1)? (startPoint? startPoint: sp): undefined; // get start point
 
             // shows moving cursor if there isn't moving and primitive is selected
             // saves active primitive point to draggablePoint
             if (!movingSubscription && this.appModel.selectedPrimitive) {
-                this.draggablePoint = this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, sp);
                 const cursor = this.canvas.nativeElement.style.cursor;
-                if (!this.draggablePoint) {
+                if (!this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, sp)) {
                     if (cursor != 'auto') {
                         canvas.style.cursor = 'auto';
                     }
@@ -194,87 +242,26 @@ export class CanvasComponent implements OnInit {
 
         canvas.ontouchmove = (event: TouchEvent)  => { //start moving if delta is reached
             const sp = this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.touches[0].pageX, event.touches[0].pageY);
-            //TODO: should be undefined when touch is finished
-            startPoint = startPoint? startPoint: sp; // get start point
-
-            // saves active primitive point to draggablePoint
-            if (!movingSubscription && this.appModel.selectedPrimitive) {
-                this.draggablePoint = this.utilsService.getPrimitivePoint(this.appModel.selectedPrimitive, sp);
-            }
 
             // trigger moving if delta is reached and there isn't other moving
             if (!movingSubscription && startPoint && !isSelectionOrMoving(startPoint, sp)) {
                 movingSubscription = Observable.fromEvent(document, 'touchmove')
-                .map((event: TouchEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.touches[0].pageX, event.touches[0].pageY))
-                .takeUntil(Observable.fromEvent(document, 'touchend'))
-                .reduce(pointAccumulator, pointInitiator(startPoint))
-                .subscribe(
-                    data => {
-                        movingSubscription.unsubscribe();
-                        movingSubscription = undefined;
-                        startPoint = undefined;
-                        if (data) {
-                            addPrimitive(data);
-                        }
-                    },
-                    e => console.log("touchmoveEvent error", e)
-                );
+                    .map((event: TouchEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.touches[0].pageX, event.touches[0].pageY))
+                    .takeUntil(Observable.fromEvent(document, 'touchend'))
+                    .reduce(pointAccumulator, pointInitiator(startPoint))
+                    .subscribe(
+                        data => {
+                            movingSubscription.unsubscribe();
+                            movingSubscription = undefined;
+                            startPoint = undefined;
+                            if (data) {
+                                addPrimitive(data);
+                            }
+                        },
+                        e => console.log("touchmoveEvent error", e)
+                    );
             }
         }
-        // ---------------------------------------------------------------------------------
-
-        // handle clicks to select primitive, it isn't moving--------
-        let firstPrimitive;
-        const selectionFinished = (start: Point, end: Point) => {
-            if (isSelectionOrMoving(start, end)) {
-                const point = this.utilsService.toNormal({
-                    'x': start.x + (end.x - start.x) / 2,
-                    'y': start.y + (end.y - start.y) / 2,
-                });
-                this.selectPrimitive(point);
-                if (this.appModel.selectedTool == Constants.TYPE_SIZE) {
-                    if (!firstPrimitive) {
-                        firstPrimitive = this.appModel.selectedPrimitive;
-                    } else if (this.appModel.selectedPrimitive) {
-                        if(this.utilsService.createSizePrimitive(
-                            firstPrimitive.start,
-                            point,
-                            firstPrimitive,
-                            this.appModel.selectedPrimitive,
-                        )) {
-                            this.historyService.snapshoot();
-                        }
-
-                        // clear creation state
-                        this.appModel.selectedTool = firstPrimitive  = undefined;
-                    }
-                } else {
-                    firstPrimitive = undefined;
-                }
-            }
-        };
-        Observable.fromEvent(canvas, 'mousedown')
-            .map((event: MouseEvent) => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
-            .subscribe((start: Point) => {
-                let subscription = Observable.fromEvent(document, 'mouseup')
-                    .map((event: MouseEvent)  => this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), event.pageX, event.pageY))
-                    .subscribe((end: Point) => {
-                        subscription.unsubscribe();
-                        selectionFinished(start, end);
-                    }, e => console.log("mouseupEvent error", e));
-            }, e => console.log("mousedownEvent error", e));
-        Observable.fromEvent(canvas, 'touchstart')
-            .map((e: TouchEvent) => this.utilsService.toNormal(this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), e.touches[0].pageX, e.touches[0].pageY)))
-            .subscribe((start: Point) => {
-                let subscription = Observable.fromEvent(document, 'touchend')
-                    .map((endEvent: TouchEvent) => this.utilsService.toNormal(this.utilsService.getScreenPoint(canvas.getBoundingClientRect(), endEvent.changedTouches[0].pageX, endEvent.changedTouches[0].pageY)))
-                    .subscribe((end: Point) => {
-                        subscription.unsubscribe();
-                        selectionFinished(start, end);
-                    }, e => console.log("touchstopEvent error", e));
-            }, e => console.log("touchstartEvent error", e));
-        // --------------------------
-
         // zoom ---------------------
         Observable.fromEvent(canvas, 'wheel').subscribe(
             (wheelEvent: WheelEvent) => {

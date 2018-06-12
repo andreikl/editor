@@ -270,7 +270,11 @@ export class UtilsService {
     }
 
     // return point of primitive
-    getPrimitivePoint(o: Primitive, sp: Point) {
+    getPrimitivePoint(o: Primitive | undefined, sp: Point) {
+        if (!o) {
+            return undefined;
+        }
+
         const sc = Constants.SELECTION_CIRCLE;
         const p1 = this.fromNormal(o.start);
         const p2 = this.fromNormal(o.end);
