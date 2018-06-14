@@ -246,7 +246,7 @@ export class UtilsService {
         //const e1 = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)? Math.abs(b.y - a.y): Math.abs(b.x - a.x);
         // the y radius
         const e1 = Math.abs(b.y - a.y);
-        console.log('e0: ' + e1);
+        //console.log('e0: ' + e1);
 
         // makes center of ellipse be the center of axis
         const dc:Point = {
@@ -334,37 +334,10 @@ export class UtilsService {
         };
     }
 
-    swapSizePositions = (sp: PrimitiveSize): Boolean => {
-        if (sp.orientation == Constants.ORIENTATION_HORIZONTAL) {
-            if (sp.start.x > sp.end.x) {
-                const tp = sp.start;
-                sp.start = sp.end;
-                sp.end = tp;
-
-                const r = sp.ref1;
-                sp.ref1 = sp.ref2;
-                sp.ref2 = r;
-                return true;
-            }
-        } else if (sp.orientation == Constants.ORIENTATION_VERTICAL) {
-            if (sp.start.y > sp.end.y) {
-                const tp = sp.start;
-                sp.start = sp.end;
-                sp.end = tp;
-
-                const r = sp.ref1;
-                sp.ref1 = sp.ref2;
-                sp.ref2 = r;
-                return true;
-            }
-        }
-        return false;
-    }
-
     createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
         if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id) // 1. line to other line case 
             && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id) // 2. rect to the same rect 
-            && (ref1.type != Constants.TYPE_ARC || ref2.type != Constants.TYPE_ARC || ref1.id != ref2.id)) // 3. arc to the same arc
+            && (ref1.type != Constants.TYPE_ARC || ref2.type != Constants.TYPE_ARC)) // 3. arc to the same arc or other arc
             return undefined;
 
         const ps = <PrimitiveSize> {
@@ -376,18 +349,10 @@ export class UtilsService {
             'ref2': ref2.id,
             'orientation': Constants.ORIENTATION_HORIZONTAL
         }
-        if (!ref1.references) {
-            ref1.references = new Array<string>();
-        }
-        ref1.references.push(ps.id);
-        if (!ref2.references) {
-            ref2.references = new Array<string>();
-        }
-        ref2.references.push(ps.id);
+        ref1.references = this.createAndAdd(ref1.references, ps.id);
+        ref2.references = this.createAndAdd(ref2.references, ps.id);
 
         this.moveSizePrimitive(ps, PointType.EndPoint, end);
-        this.swapSizePositions(ps);
-        
 
         this.appModel.selectedPrimitive = ps;
         this.appModel.data.set(ps.id, ps);
@@ -478,11 +443,15 @@ export class UtilsService {
     }
 
     moveSizePrimitive = (ps: PrimitiveSize, pt: PointType, point: Point) => {
+        // swap xy if it is negative to avoid negative values and simplify calculations
+        if (this.swapSizePositions(ps)) {
+            pt = (pt == PointType.EndPoint)? PointType.StartPoint: PointType.EndPoint;
+        }
+
         const r1 = this.appModel.data.get(ps.ref1);
         const r2 = this.appModel.data.get(ps.ref2);
         if (r1 && r2) {
-            // line to other line case
-            if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) {
+            if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) { // line to other line case
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
                     if (pt == PointType.StartPoint) {
                         const p = this.getClosestLinePoint(r1.start, r1.end, point);
@@ -518,61 +487,42 @@ export class UtilsService {
                    
                 }
             } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id == r2.id) { // rect to the same rect case
-                const leftBottom = {
-                    'x': r1.start.x,
-                    'y': r1.end.y,
-                };
-                const rightTop = {
-                    'x': r1.end.x,
-                    'y': r1.start.y,
-                };
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
-                    if (pt == PointType.StartPoint) {
-                        const p = this.getClosestLinePoint(r1.start, leftBottom, point);
-                        const x = this.getXofLine(rightTop, r1.end, p.y);
-                        ps.start.x = p.x;
-                        ps.start.y = p.y;
-                        ps.end.x = x;
-                        ps.end.y = p.y;
-                    } else {
-                        const p = this.getClosestLinePoint(rightTop, r1.end, point);
-                        const x = this.getXofLine(r1.start, leftBottom, p.y);
-                        ps.start.x = x;
-                        ps.start.y = p.y;
-                        ps.end.x = p.x;
-                        ps.end.y = p.y;
-                    }
+                    ps.start.x = r1.start.x;
+                    ps.start.y = point.y;
+                    ps.end.x = r1.end.x;
+                    ps.end.y = point.y;
                 } else {
-                    if (pt == PointType.StartPoint) {
-                        const p = this.getClosestLinePoint(r1.start, rightTop, point);
-                        const y = this.getYofLine(leftBottom, r1.end, p.x);
-                        ps.start.x = p.x;
-                        ps.start.y = p.y;
-                        ps.end.x = p.x;
-                        ps.end.y = y;
-                    } else {
-                        const p = this.getClosestLinePoint(leftBottom, r1.end, point);
-                        const y = this.getYofLine(r1.start, rightTop, p.x);
-                        ps.start.x = p.x;
-                        ps.start.y = y;
-                        ps.end.x = p.x;
-                        ps.end.y = p.y;
-                    }
+                    ps.start.x = point.x;
+                    ps.start.y = r1.start.y;
+                    ps.end.x = point.x;
+                    ps.end.y = r1.end.y;
                 }
             } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id == r2.id) { // arc to the same arc case
-                const p = this.getClosestEllipsePoint(r1.start, r1.end, point);
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
-                    const xx = this.getXOfEllipse(r1.start, r1.end, p.y);
+                    const xx = this.getXOfEllipse(r1.start, r1.end, r1.start.y);
                     ps.start.x = xx.x;
-                    ps.start.y = p.y;
+                    ps.start.y = point.y;
                     ps.end.x = xx.y;
-                    ps.end.y = p.y;
+                    ps.end.y = point.y;
                 } else {
-                    const yy = this.getYOfEllipse(r1.start, r1.end, p.x);
-                    ps.start.x = p.x;
-                    ps.start.y = yy.x;
-                    ps.end.x = p.x;
-                    ps.end.y = yy.y;
+                    const yy = this.getYOfEllipse(r1.start, r1.end, r1.start.x);
+                    ps.start.x = point.x;
+                    ps.start.y = yy.y;
+                    ps.end.x = point.x;
+                    ps.end.y = yy.x;
+                }
+            } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id != r2.id) { // arc to other arc case
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    ps.start.x = r1.start.x;
+                    ps.start.y = point.y;
+                    ps.end.x = r2.start.x;
+                    ps.end.y = point.y;
+                } else {
+                    ps.start.x = point.x;
+                    ps.start.y = r1.start.y;
+                    ps.end.x = point.x;
+                    ps.end.y = r2.start.y;
                 }
             }
         }
@@ -585,5 +535,40 @@ export class UtilsService {
 
     private dotProduction(x: Point, y: Point) {
         return x.x * y.x + x.y * y.y;
+    }
+
+    private createAndAdd<T>(arr: Array<T> | undefined, value: T) {
+        if (arr) {
+            arr.push(value)
+            return arr;
+        } else 
+            return new Array<T>(value);
+    }
+
+    private swapSizePositions = (sp: PrimitiveSize): Boolean => {
+        if (sp.orientation == Constants.ORIENTATION_HORIZONTAL) {
+            if (sp.start.x > sp.end.x) {
+                const tp = sp.start;
+                sp.start = sp.end;
+                sp.end = tp;
+
+                const r = sp.ref1;
+                sp.ref1 = sp.ref2;
+                sp.ref2 = r;
+                return true;
+            }
+        } else if (sp.orientation == Constants.ORIENTATION_VERTICAL) {
+            if (sp.start.y > sp.end.y) {
+                const tp = sp.start;
+                sp.start = sp.end;
+                sp.end = tp;
+
+                const r = sp.ref1;
+                sp.ref1 = sp.ref2;
+                sp.ref2 = r;
+                return true;
+            }
+        }
+        return false;
     }
 }

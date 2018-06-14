@@ -91,12 +91,7 @@ export class CanvasComponent implements OnInit {
             const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
                 if (draggablePoint.primitive.type == Constants.TYPE_SIZE) { // size primitive has special logic
-                    const ps = <PrimitiveSize>draggablePoint.primitive;
-                    // swap xy if it is negative to avoid negative values and simplify calculations
-                    if(this.utilsService.swapSizePositions(ps)) {
-                        draggablePoint.direction = (draggablePoint.direction == PointType.EndPoint)? PointType.StartPoint: PointType.EndPoint;
-                    }
-                    this.utilsService.moveSizePrimitive(ps, draggablePoint.direction, point);
+                    this.utilsService.moveSizePrimitive(<PrimitiveSize>draggablePoint.primitive, draggablePoint.direction, point);
                 } else {
                     this.utilsService.movePrimitive(draggablePoint.primitive, draggablePoint, point);
                 }
@@ -289,9 +284,9 @@ export class CanvasComponent implements OnInit {
     selectPrimitive(point: Point) {
         this.appModel.selectedPrimitive = Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
 
-        const canvas = this.canvas.nativeElement;
-        const context = canvas.getContext("2d");
-        Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point, context));
+        //const canvas = this.canvas.nativeElement;
+        //const context = canvas.getContext("2d");
+        Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
     }
 
     drawScene(data: Primitive | null) {
