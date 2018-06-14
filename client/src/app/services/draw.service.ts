@@ -174,17 +174,6 @@ export class DrawService {
             context.beginPath();
             context.arc(x2, y2, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
             context.stroke();
-
-            if (this.appModel.selectedPrimitive.type == Constants.TYPE_PEN) {
-                const pen = <PrimitivePen>this.appModel.selectedPrimitive;
-                pen.points.forEach((o, index) => {
-                    const x = this.appModel.zoom * (this.appModel.offset.x + o.x);
-                    const y = this.appModel.zoom * (this.appModel.offset.y + o.y);
-                    context.beginPath();
-                    context.arc(x, y, Constants.SELECTION_CIRCLE, 0, 2 * Math.PI);
-                    context.stroke();
-                });
-            }
         }
     }
 
@@ -204,9 +193,6 @@ export class DrawService {
 
             case Constants.TYPE_RECTANGLE:
                 return this.drawRect(x1, y1, x2, y2, p, context);
-
-            case Constants.TYPE_PEN:
-                return this.drawPen(x1, y1, x2, y2, p, context);
 
             case Constants.TYPE_ARC:
                 return this.drawArc(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1), p, context);

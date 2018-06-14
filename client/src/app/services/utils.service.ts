@@ -299,16 +299,6 @@ export class UtilsService {
                 'pointType': PointType.EndPoint,
                 'primitive': this.appModel.selectedPrimitive
             };
-        } else if (o.type == Constants.TYPE_PEN) {
-            const pen = <PrimitivePen>o;
-            return pen.points.filter(point => {
-                const p = this.fromNormal(point);
-                return sp.x >= p.x - sc && sp.x <= p.x + sc && sp.y >= p.y - sc && sp.y <= p.y + sc;
-            }).map(point => <PrimitivePoint> {
-                'point': point,
-                'pointType': PointType.MiddlePoint,
-                'primitive': this.appModel.selectedPrimitive
-            }).find(point => true);
         }
     }
 
@@ -346,6 +336,8 @@ export class UtilsService {
     createSizePrimitive(pp1: PrimitivePoint, pp2: PrimitivePoint): Primitive | undefined {
         if ((pp1.primitive.type != Constants.TYPE_LINE || pp2.primitive.type != Constants.TYPE_LINE || pp1.primitive.id == pp2.primitive.id) // 1. line to other line case 
             && (pp1.primitive.type != Constants.TYPE_RECTANGLE || pp2.primitive.type != Constants.TYPE_RECTANGLE) // 2. rect to the same rect or other rect
+            && (pp1.primitive.type != Constants.TYPE_RECTANGLE || pp2.primitive.type != Constants.TYPE_ARC) // 2. rect to arc
+            && (pp1.primitive.type != Constants.TYPE_ARC || pp2.primitive.type != Constants.TYPE_RECTANGLE) // 2. arc to rect
             && (pp1.primitive.type != Constants.TYPE_ARC || pp2.primitive.type != Constants.TYPE_ARC)) // 3. arc to the same arc or other arc
             return undefined;
 
@@ -384,14 +376,6 @@ export class UtilsService {
                     'endAngle': 2 * Math.PI
                 };
 
-            case Constants.TYPE_PEN:
-                return <PrimitivePen> {
-                    'id': Date.now().toString(),
-                    'type': type,
-                    'start': point,
-                    'end': { 'x': point.x, 'y': point.y },
-                    'points': new Array<Point>()
-                };
             case Constants.TYPE_LINE:
             case Constants.TYPE_RECTANGLE:
                 return <Primitive> {
@@ -430,13 +414,6 @@ export class UtilsService {
             const deltay = pp.point.y - oldy;
             p.end.x += deltax;
             p.end.y += deltay;
-            if (p.type == Constants.TYPE_PEN) {
-                const pp = <PrimitivePen>p;
-                pp.points.forEach(o => {
-                    o.x += deltax;
-                    o.y += deltay;
-                });
-            }
         } else {
             pp.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
             pp.point.y = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.y / this.appModel.grid): point.y;
@@ -530,6 +507,46 @@ export class UtilsService {
                     } else {
                         ps.start.y = r1.end.y;
                     }
+                    ps.end.x = point.x;
+                    if (ps.ref2Type == PointType.StartPoint) {
+                        ps.end.y = r2.start.y;
+                    } else {
+                        ps.end.y = r2.end.y;
+                    }
+                }
+            } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_ARC) { // rect to arc
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    if (ps.ref1Type == PointType.StartPoint) {
+                        ps.start.x = r1.start.x;
+                    } else {
+                        ps.start.x = r1.end.x;
+                    }
+                    ps.start.y = point.y;
+                    ps.end.x = r2.start.x;
+                    ps.end.y = point.y;
+                } else {
+                    ps.start.x = point.x;
+                    if (ps.ref1Type == PointType.StartPoint) {
+                        ps.start.y = r1.start.y;
+                    } else {
+                        ps.start.y = r1.end.y;
+                    }
+                    ps.end.x = point.x;
+                    ps.end.y = r2.start.y;
+                }
+            } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_RECTANGLE) { // arc to rect
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    ps.start.x = r1.start.x;
+                    ps.start.y = point.y;
+                    if (ps.ref2Type == PointType.StartPoint) {
+                        ps.end.x = r2.start.x;
+                    } else {
+                        ps.end.x = r2.end.x;
+                    }
+                    ps.end.y = point.y;
+                } else {
+                    ps.start.x = point.x;
+                    ps.start.y = r1.start.y;
                     ps.end.x = point.x;
                     if (ps.ref2Type == PointType.StartPoint) {
                         ps.end.y = r2.start.y;

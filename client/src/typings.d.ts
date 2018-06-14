@@ -28,10 +28,6 @@ interface PrimitiveArc extends Primitive {
     'endAngle': number;
 }
 
-interface PrimitivePen extends Primitive {
-    'points': Array<Point>;
-}
-
 interface PrimitiveSize extends Primitive {
     'ref1': string;
     'ref1Type': PointType;

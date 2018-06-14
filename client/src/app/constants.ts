@@ -11,7 +11,6 @@ export class Constants {
 
     static TYPE_LINE = 'line';
     static TYPE_RECTANGLE = 'rectangle';
-    static TYPE_PEN = 'pen';
     static TYPE_ARC = 'arc';
     static TYPE_SIZE = 'size';
     static TYPE_PLUS = 'plus';
@@ -45,7 +44,6 @@ export class Constants {
     static TOOL_ITEMS = [
         { id: Constants.TYPE_LINE, name: "Line", isActive: true },
         { id: Constants.TYPE_RECTANGLE, name: "Rectangle", isActive: false },
-        { id: Constants.TYPE_PEN, name: "Pen", isActive: false },
         { id: Constants.TYPE_ARC, name: "Arc", isActive: false },
         { id: Constants.TYPE_SIZE, name: "Size", isActive: false },
     ];

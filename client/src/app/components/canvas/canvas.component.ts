@@ -107,15 +107,6 @@ export class CanvasComponent implements OnInit {
             } else { // creating primitive state
                 x.end.x = y.x = point.x;
                 x.end.y = y.y = point.y;
-                if (this.appModel.selectedTool == Constants.TYPE_PEN) {
-                    const pen = <PrimitivePen>x;
-                    const lastIndex = pen.points.length - 1;
-                    if (lastIndex >= 0 && (pen.points[lastIndex].x != y.x || pen.points[lastIndex].y != y.y)) {
-                        pen.points.push(y);
-                    } else if (pen.points.length == 0) {
-                        pen.points.push(y);
-                    }
-                }
                 this.drawScene(x);
             }
             return x;
@@ -127,7 +118,6 @@ export class CanvasComponent implements OnInit {
                 this.historyService.snapshoot();
             } else if (data.type == Constants.TYPE_LINE ||
                 data.type == Constants.TYPE_RECTANGLE ||
-                data.type == Constants.TYPE_PEN ||
                 data.type == Constants.TYPE_ARC) {
 
                 this.utilsService.addPrimitive(data)

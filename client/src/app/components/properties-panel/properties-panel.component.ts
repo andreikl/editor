@@ -88,8 +88,7 @@ export class PropertiesPanelComponent implements OnInit {
 
     drawWindow() {
         if (this.appModel.selectedPrimitive && (this.appModel.selectedPrimitive.type == Constants.TYPE_RECTANGLE
-            || this.appModel.selectedPrimitive.type == Constants.TYPE_LINE
-            || this.appModel.selectedPrimitive.type == Constants.TYPE_PEN)) {
+            || this.appModel.selectedPrimitive.type == Constants.TYPE_LINE)) {
             //clear all content and load new
             this.view.clear();
 
@@ -100,8 +99,6 @@ export class PropertiesPanelComponent implements OnInit {
                 this.title = 'Rectangle properies';
             } else if (this.appModel.selectedPrimitive.type == Constants.TYPE_LINE) {
                 this.title = 'Line properies';
-            } else if (this.appModel.selectedPrimitive.type == Constants.TYPE_PEN) {
-                this.title = 'Pen properies';
             }
         } else if (this.appModel.selectedPrimitive && this.appModel.selectedPrimitive.type == Constants.TYPE_ARC) {
             this.view.clear();

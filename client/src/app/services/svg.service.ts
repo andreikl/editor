@@ -86,12 +86,6 @@ export class SvgService {
                     o = this.normalize(o);
                     return '<rect id="' + o.id + '" x="' + o.start.x + '" y="' + o.start.y + '" width="' + (o.end.x - o.start.x) + '" height="' + (o.end.y - o.start.y) + '" stroke-width="1" stroke="#000000" fill="none" />\n';
 
-                case Constants.TYPE_PEN:
-                    const pen = <PrimitivePen>o;
-                    return '<polyline id="' + o.id + '" points="' + pen.start.x + ',' + pen.start.y + ' '
-                        + pen.points.map(point => point.x + ',' + point.y).reduce((x, y) => (x == '')? y: x + ' ' + y, '')
-                        + '" stroke-width="1" stroke="#000000" fill="none" />\n';
-
                 case Constants.TYPE_SIZE:
                 {
                     const ps = <PrimitiveSize>o;
