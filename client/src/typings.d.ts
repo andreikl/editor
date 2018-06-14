@@ -34,12 +34,14 @@ interface PrimitivePen extends Primitive {
 
 interface PrimitiveSize extends Primitive {
     'ref1': string;
+    'ref1Type': PointType;
     'ref2': string;
+    'ref2Type': PointType;
     'orientation': string;
 }
 
 interface PrimitivePoint {
-    'direction': PointType;
+    'pointType': PointType;
     'point': Point;
     'primitive': Primitive;
 }

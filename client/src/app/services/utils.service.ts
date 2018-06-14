@@ -113,31 +113,9 @@ export class UtilsService {
         }
     }
 
-    // check if elipse close enough to point
-    testEllipse(a: Point, b: Point, point: Point, context?: any) {
-        const d = this.getClosestEllipsePoint(a, b, point);
-
-        if (context) {
-            point = this.fromNormal(point);
-            const d1 = this.fromNormal(d);
-
-            //draw projection line
-            context.beginPath();
-            context.moveTo(point.x, point.y);
-            context.lineTo(d1.x, d1.y);
-            context.stroke();
-        }
-
-        const xd = point.x - d.x;
-        const yd = point.y - d.y
-        const dist = xd * xd + yd * yd;
-
-        const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
-        return (dist < screenDist* screenDist)? true: false;
-    }
-
     // check if line close enough to point
-    testLine(a: Point, b: Point, point: Point, context?: any) {
+    testLine(pr: Primitive, a: Point, b: Point, point: Point, pp: PointType | undefined): PrimitivePoint | undefined {
+        // optimized calculation
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
@@ -163,53 +141,71 @@ export class UtilsService {
             }
         }
         const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
-        return (dist < screenDist * screenDist)? true: false;
+        return (dist < screenDist * screenDist)? this.getClosestLinePoint(pr, a, b, point, pp): undefined;
+    }
+
+    // check if elipse close enough to point
+    testEllipse(pr: Primitive, a: Point, b: Point, point: Point, context?: any): PrimitivePoint | undefined {
+        const d = this.getClosestEllipsePoint(a, b, point);
+
+        if (context) {
+            point = this.fromNormal(point);
+            const d1 = this.fromNormal(d);
+
+            //draw projection line
+            context.beginPath();
+            context.moveTo(point.x, point.y);
+            context.lineTo(d1.x, d1.y);
+            context.stroke();
+        }
+
+        const xd = point.x - d.x;
+        const yd = point.y - d.y
+        const dist = xd * xd + yd * yd;
+
+        const screenDist = Constants.SELECTION_CIRCLE / this.appModel.zoom
+        return (dist < screenDist* screenDist)? {
+            'pointType': PointType.MiddlePoint,
+            'point': {
+                'x': a.x,
+                'y': a.y
+            },
+            'primitive': pr
+        }: undefined;
     }
 
     // check if edge of primitive close enough to point
-    testPrimitive(prim: Primitive, point: Point, context?: any): boolean {
+    testPrimitive(prim: Primitive, point: Point, context?: any): PrimitivePoint | undefined {
         switch(prim.type) {
             case Constants.TYPE_LINE:
             case Constants.TYPE_SIZE:
-                return this.testLine(prim.start, prim.end, point);
+                return this.testLine(prim, prim.start, prim.end, point, undefined);
 
             case Constants.TYPE_ARC:
-                return this.testEllipse(prim.start, prim.end, point, context);
+                return this.testEllipse(prim, prim.start, prim.end, point, context);
 
             case Constants.TYPE_RECTANGLE:
-                return this.testLine(prim.start, {
+                return this.testLine(prim, prim.start, { // left line
                     'x': prim.start.x,
                     'y': prim.end.y
-                }, point) || this.testLine({
+                }, point, PointType.StartPoint) || this.testLine(prim, { // bottom line
                     'x': prim.start.x,
                     'y': prim.end.y
-                }, prim.end, point) || this.testLine(prim.end, {
+                }, prim.end, point, PointType.EndPoint) || this.testLine(prim, prim.end, { // right line
                     'x': prim.end.x,
                     'y': prim.start.y
-                }, point) || this.testLine({
+                }, point, PointType.EndPoint) || this.testLine(prim, { // top line
                     'x': prim.end.x,
                     'y': prim.start.y
-                }, prim.start, point);
-
-            case Constants.TYPE_PEN:
-                const pen = <PrimitivePen>prim;
-                return pen.points.reduce((x, y) => {
-                    return {
-                        'res': x.res || this.testLine(x.point, y, point),
-                        'point': y
-                    }
-                }, {
-                    'res': false,
-                    'point': prim.start
-                }).res;
+                }, prim.start, point, PointType.StartPoint);
 
             default:
-                return false;
+                return undefined;
         };
     }
 
     // get closest point to line
-    getClosestLinePoint(a: Point, b: Point, point: Point) {
+    getClosestLinePoint(pr: Primitive, a: Point, b: Point, point: Point, pp: PointType | undefined = undefined, isAttachToEnd: Boolean = false): PrimitivePoint {
         const ab = {
             'x': b.x - a.x,
             'y': b.y - a.y,
@@ -226,13 +222,26 @@ export class UtilsService {
         let t = this.dotProduction(ac, ab) / this.dotProduction(ab, ab);
 
         // if point outside ab, attach t to the closest endpoint
-        if (t < 0.0) t = 0.0;
-        if (t > 1.0) t = 1.0;
-
-        // compute the closest point on ab
-        return {
-            'x': ab.x * t + a.x,
-            'y': ab.y * t + a.y
+        if (t < 0.5) {
+            if (isAttachToEnd && t < 0.0) t = 0.0;
+            return {
+                'point': {
+                    'x': ab.x * t + a.x,
+                    'y': ab.y * t + a.y
+                },
+                'pointType': pp || PointType.StartPoint,
+                'primitive': pr
+            }
+        } else {
+            if (isAttachToEnd && t > 1.0) t = 1.0;
+            return {
+                'point': {
+                    'x': ab.x * t + a.x,
+                    'y': ab.y * t + a.y
+                },
+                'pointType': pp || PointType.EndPoint,
+                'primitive': pr
+            }
         }
     }
 
@@ -278,16 +287,16 @@ export class UtilsService {
         const sc = Constants.SELECTION_CIRCLE;
         const p1 = this.fromNormal(o.start);
         const p2 = this.fromNormal(o.end);
-        if (sp.x >= p1.x - sc && sp.x <= p1.x + sc && sp.y >= p1.y - sc && sp.y <= p1.y + sc) {
+        if (sp.x >= p1.x - sc && sp.x <= p1.x + sc && sp.y >= p1.y - sc && sp.y <= p1.y + sc) { // start point
             return <PrimitivePoint> {
                 'point': o.start,
-                'direction': PointType.StartPoint,
+                'pointType': PointType.StartPoint,
                 'primitive': this.appModel.selectedPrimitive
             };
-        } else if (sp.x >= p2.x - sc && sp.x <= p2.x + sc && sp.y >= p2.y - sc && sp.y <= p2.y + sc) {
+        } else if (sp.x >= p2.x - sc && sp.x <= p2.x + sc && sp.y >= p2.y - sc && sp.y <= p2.y + sc) { // end point
             return <PrimitivePoint> {
                 'point': o.end,
-                'direction': PointType.EndPoint,
+                'pointType': PointType.EndPoint,
                 'primitive': this.appModel.selectedPrimitive
             };
         } else if (o.type == Constants.TYPE_PEN) {
@@ -297,7 +306,7 @@ export class UtilsService {
                 return sp.x >= p.x - sc && sp.x <= p.x + sc && sp.y >= p.y - sc && sp.y <= p.y + sc;
             }).map(point => <PrimitivePoint> {
                 'point': point,
-                'direction': PointType.MiddlePoint,
+                'pointType': PointType.MiddlePoint,
                 'primitive': this.appModel.selectedPrimitive
             }).find(point => true);
         }
@@ -334,25 +343,27 @@ export class UtilsService {
         };
     }
 
-    createSizePrimitive(start: Point, end: Point, ref1: Primitive, ref2: Primitive): Primitive | undefined {
-        if ((ref1.type != Constants.TYPE_LINE || ref2.type != Constants.TYPE_LINE || ref1.id == ref2.id) // 1. line to other line case 
-            && (ref1.type != Constants.TYPE_RECTANGLE || ref2.type != Constants.TYPE_RECTANGLE || ref1.id != ref2.id) // 2. rect to the same rect 
-            && (ref1.type != Constants.TYPE_ARC || ref2.type != Constants.TYPE_ARC)) // 3. arc to the same arc or other arc
+    createSizePrimitive(pp1: PrimitivePoint, pp2: PrimitivePoint): Primitive | undefined {
+        if ((pp1.primitive.type != Constants.TYPE_LINE || pp2.primitive.type != Constants.TYPE_LINE || pp1.primitive.id == pp2.primitive.id) // 1. line to other line case 
+            && (pp1.primitive.type != Constants.TYPE_RECTANGLE || pp2.primitive.type != Constants.TYPE_RECTANGLE) // 2. rect to the same rect or other rect
+            && (pp1.primitive.type != Constants.TYPE_ARC || pp2.primitive.type != Constants.TYPE_ARC)) // 3. arc to the same arc or other arc
             return undefined;
 
         const ps = <PrimitiveSize> {
             'id': Date.now().toString(),
             'type': Constants.TYPE_SIZE,
-            'start': this.clone(ref1.start, false),
-            'end': this.clone(ref2.end, false),
-            'ref1': ref1.id,
-            'ref2': ref2.id,
+            'start': this.clone(pp1.point, false),
+            'end': this.clone(pp2.point, false),
+            'ref1': pp1.primitive.id,
+            'ref1Type': pp1.pointType,
+            'ref2': pp2.primitive.id,
+            'ref2Type': pp2.pointType,
             'orientation': Constants.ORIENTATION_HORIZONTAL
         }
-        ref1.references = this.createAndAdd(ref1.references, ps.id);
-        ref2.references = this.createAndAdd(ref2.references, ps.id);
+        pp1.primitive.references = this.createAndAdd(pp1.primitive.references, ps.id);
+        pp2.primitive.references = this.createAndAdd(pp2.primitive.references, ps.id);
 
-        this.moveSizePrimitive(ps, PointType.EndPoint, end);
+        this.moveSizePrimitive(ps, PointType.EndPoint, ps.end);
 
         this.appModel.selectedPrimitive = ps;
         this.appModel.data.set(ps.id, ps);
@@ -410,7 +421,7 @@ export class UtilsService {
     }
 
     movePrimitive = (p: Primitive, pp: PrimitivePoint, point: Point) => {
-        if (pp.direction == PointType.StartPoint) {
+        if (pp.pointType == PointType.StartPoint) {
             const oldx = pp.point.x;
             const oldy = pp.point.y;
             pp.point.x = !isNaN(this.appModel.grid)? this.appModel.grid * Math.round(point.x / this.appModel.grid): point.x;
@@ -454,35 +465,35 @@ export class UtilsService {
             if (r1.type == Constants.TYPE_LINE && r2.type == Constants.TYPE_LINE && r1.id != r2.id) { // line to other line case
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
                     if (pt == PointType.StartPoint) {
-                        const p = this.getClosestLinePoint(r1.start, r1.end, point);
-                        const x = this.getXofLine(r2.start, r2.end, p.y);
-                        ps.start.x = p.x;
-                        ps.start.y = p.y;
+                        const p = this.getClosestLinePoint(r1, r1.start, r1.end, point, undefined);
+                        const x = this.getXofLine(r2.start, r2.end, p.point.y);
+                        ps.start.x = p.point.x;
+                        ps.start.y = p.point.y;
                         ps.end.x = x;
-                        ps.end.y = p.y;
+                        ps.end.y = p.point.y;
                     } else {
-                        const p = this.getClosestLinePoint(r2.start, r2.end, point);
-                        const x = this.getXofLine(r1.start, r1.end, p.y);
+                        const p = this.getClosestLinePoint(r2, r2.start, r2.end, point, undefined);
+                        const x = this.getXofLine(r1.start, r1.end, p.point.y);
                         ps.start.x = x;
-                        ps.start.y = p.y;
-                        ps.end.x = p.x;
-                        ps.end.y = p.y;
+                        ps.start.y = p.point.y;
+                        ps.end.x = p.point.x;
+                        ps.end.y = p.point.y;
                     }
                 } else {
                     if (pt == PointType.StartPoint) {
-                        const p = this.getClosestLinePoint(r1.start, r1.end, point);
-                        const y = this.getYofLine(r2.start, r2.end, p.x);
-                        ps.start.x = p.x;
-                        ps.start.y = p.y;
-                        ps.end.x = p.x;
+                        const p = this.getClosestLinePoint(r1, r1.start, r1.end, point, undefined);
+                        const y = this.getYofLine(r2.start, r2.end, p.point.x);
+                        ps.start.x = p.point.x;
+                        ps.start.y = p.point.y;
+                        ps.end.x = p.point.x;
                         ps.end.y = y;
                     } else {
-                        const p = this.getClosestLinePoint(r2.start, r2.end, point);
-                        const y = this.getYofLine(r1.start, r1.end, p.x);
-                        ps.start.x = p.x;
+                        const p = this.getClosestLinePoint(r2, r2.start, r2.end, point, undefined);
+                        const y = this.getYofLine(r1.start, r1.end, p.point.x);
+                        ps.start.x = p.point.x;
                         ps.start.y = y;
-                        ps.end.x = p.x;
-                        ps.end.y = p.y;
+                        ps.end.x = p.point.x;
+                        ps.end.y = p.point.y;
                     }
                    
                 }
@@ -497,6 +508,34 @@ export class UtilsService {
                     ps.start.y = r1.start.y;
                     ps.end.x = point.x;
                     ps.end.y = r1.end.y;
+                }
+            } else if (r1.type == Constants.TYPE_RECTANGLE && r2.type == Constants.TYPE_RECTANGLE && r1.id != r2.id) { // rect to other rect case
+                if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
+                    if (ps.ref1Type == PointType.StartPoint) {
+                        ps.start.x = r1.start.x;
+                    } else {
+                        ps.start.x = r1.end.x;
+                    }
+                    ps.start.y = point.y;
+                    if (ps.ref2Type == PointType.StartPoint) {
+                        ps.end.x = r2.start.x;
+                    } else {
+                        ps.end.x = r2.end.x;
+                    }
+                    ps.end.y = point.y;
+                } else {
+                    ps.start.x = point.x;
+                    if (ps.ref1Type == PointType.StartPoint) {
+                        ps.start.y = r1.start.y;
+                    } else {
+                        ps.start.y = r1.end.y;
+                    }
+                    ps.end.x = point.x;
+                    if (ps.ref2Type == PointType.StartPoint) {
+                        ps.end.y = r2.start.y;
+                    } else {
+                        ps.end.y = r2.end.y;
+                    }
                 }
             } else if (r1.type == Constants.TYPE_ARC && r2.type == Constants.TYPE_ARC && r1.id == r2.id) { // arc to the same arc case
                 if (ps.orientation == Constants.ORIENTATION_HORIZONTAL) {
@@ -526,6 +565,8 @@ export class UtilsService {
                 }
             }
         }
+        // swap position again in case the moving cause start point to be more than end point
+        this.swapSizePositions(ps)
     }
 
     updateSizeOrientation = (ps: PrimitiveSize) => {

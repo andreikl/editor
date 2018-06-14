@@ -91,7 +91,7 @@ export class CanvasComponent implements OnInit {
             const point = this.utilsService.toNormal(y, false);
             if (draggablePoint) { // editing primitive state
                 if (draggablePoint.primitive.type == Constants.TYPE_SIZE) { // size primitive has special logic
-                    this.utilsService.moveSizePrimitive(<PrimitiveSize>draggablePoint.primitive, draggablePoint.direction, point);
+                    this.utilsService.moveSizePrimitive(<PrimitiveSize>draggablePoint.primitive, draggablePoint.pointType, point);
                 } else {
                     this.utilsService.movePrimitive(draggablePoint.primitive, draggablePoint, point);
                 }
@@ -143,32 +143,30 @@ export class CanvasComponent implements OnInit {
         }
 
         // handle clicks to select primitive, it isn't moving--------
-        let firstPrimitive;
+        let firstPoint;
         const selectionFinished = (start: Point, end: Point) => {
             if (isSelectionOrMoving(start, end)) {
                 const point = this.utilsService.toNormal({
                     'x': start.x + (end.x - start.x) / 2,
                     'y': start.y + (end.y - start.y) / 2,
                 });
-                this.selectPrimitive(point);
+                const pp = this.selectPrimitive(point);
                 if (this.appModel.selectedTool == Constants.TYPE_SIZE) {
-                    if (!firstPrimitive) {
-                        firstPrimitive = this.appModel.selectedPrimitive;
-                    } else if (this.appModel.selectedPrimitive) {
+                    if (!firstPoint) {
+                        firstPoint = pp;
+                    } else if (pp) {
                         if(this.utilsService.createSizePrimitive(
-                            firstPrimitive.start,
-                            point,
-                            firstPrimitive,
-                            this.appModel.selectedPrimitive,
+                            firstPoint,
+                            pp
                         )) {
                             this.historyService.snapshoot();
                         }
 
                         // clear creation state
-                        this.appModel.selectedTool = firstPrimitive  = undefined;
+                        this.appModel.selectedTool = firstPoint = undefined;
                     }
                 } else {
-                    firstPrimitive = undefined;
+                    firstPoint = undefined;
                 }
             }
         };
@@ -281,12 +279,12 @@ export class CanvasComponent implements OnInit {
         //}
     }
 
-    selectPrimitive(point: Point) {
-        this.appModel.selectedPrimitive = Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
-
-        //const canvas = this.canvas.nativeElement;
-        //const context = canvas.getContext("2d");
-        Array.from(this.appModel.data.values()).find(o => this.utilsService.testPrimitive(o, point));
+    selectPrimitive(point: Point): PrimitivePoint | undefined {
+        const pp = Array.from(this.appModel.data.values()).map(o => this.utilsService.testPrimitive(o, point)).find(o => !!o);
+        if (pp) {
+            this.appModel.selectedPrimitive = pp.primitive;
+        }
+        return pp;
     }
 
     drawScene(data: Primitive | null) {
