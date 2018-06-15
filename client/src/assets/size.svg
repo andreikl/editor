@@ -1,0 +1,6 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<g>
+<style>   .text { font: 20px arial; }</style><line id="1529015245742" x1="12" y1="12" x2="12" y2="56" stroke-width="4" stroke="#000000" fill="none" />
+<line id="1529015272534" x1="56" y1="12" x2="56" y2="56" stroke-width="4" stroke="#000000" fill="none" />
+<path id="1529015496877" d=" M12.00 31.92 L21.85 33.66 L21.85 30.19 L12.00 31.92 Z M12.00 31.92 L56.00 31.92 Z M56.00 31.92 L46.15 30.19 L46.15 33.66 L56.00 31.92 Z" stroke-width="1" stroke="#000000" />
+</svg>

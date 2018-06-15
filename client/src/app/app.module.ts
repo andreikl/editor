@@ -6,7 +6,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MatIconModule,
     MatInputModule, MatFormFieldModule,
-    MatExpansionModule,
+    MatExpansionModule, MatDividerModule,
     MatSelectModule} from '@angular/material';
 
 import { AppComponent } from './app.component';
@@ -45,7 +45,8 @@ import { HistoryService } from './services/history.service';
         FormsModule,
 
         // -- Material Design
-        MatExpansionModule,
+        MatExpansionModule, MatDividerModule,
+        // -- Inputs
         MatInputModule, MatSelectModule, MatFormFieldModule,
         MatIconModule,
 

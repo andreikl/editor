@@ -1,2 +1,57 @@
-<app-controls-grid [items]=toolItems></app-controls-grid>
+<div>
+    <div class="panel-header">
+        <p>Creation</p>
+    </div>
+    <app-controls-grid [items]=toolItems></app-controls-grid>
+</div>
+<mat-divider></mat-divider>
+<div>
+    <div class="panel-header">
+        <p>Page</p>
+    </div>
+    <ul class="component controls-grid">
+        <li class="item" (click)="clickHandler($event, pageItems.plus)">
+            <mat-icon svgIcon="{{pageItems.plus.id}}">{{pageItems.plus.id}}</mat-icon>
+            <span class="name">{{ pageItems.plus.name }}</span>
+        </li>
+        <li class="item" (click)="clickHandler($event, pageItems.minus)">
+            <mat-icon svgIcon="{{pageItems.minus.id}}">{{pageItems.minus.id}}</mat-icon>
+            <span class="name">{{ pageItems.minus.name }}</span>
+        </li>
+        <li class="item" (click)="clickHandler($event, pageItems.grid)">
+            <mat-icon svgIcon="{{pageItems.grid.id}}">{{pageItems.grid.id}}</mat-icon>
+            <span class="name">{{ pageItems.grid.name }}</span>
+        </li>
+        <li class="item" (click)="clickHandler($event, pageItems.move)">
+            <mat-icon svgIcon="{{pageItems.move.id}}">{{pageItems.move.id}}</mat-icon>
+            <span class="name">{{ pageItems.move.name }}</span>
+        </li>
+    </ul>
+</div>
+<mat-divider></mat-divider>
+<div>
+    <div class="panel-header">
+        <p>File</p>
+    </div>
+    <ul class="component controls-grid">
+        <li class="item" (click)="clickHandler($event, fileItems.save)">
+            <mat-icon svgIcon="{{fileItems.save.id}}">{{fileItems.save.id}}</mat-icon>
+            <span class="name">{{ fileItems.save.name }}</span>
+        </li>
+        <li class="item">
+            <mat-icon svgIcon="{{fileItems.load.id}}">{{fileItems.load.id}}</mat-icon>
+            <span class="name">{{ fileItems.load.name }}</span>
+            <input type="file" name="svgFile" id="svgFile" (change)="loadHandler($event)">
+        </li>
+        <li class="item" (click)="clickHandler($event, fileItems.back)">
+            <mat-icon svgIcon="{{fileItems.back.id}}">{{fileItems.back.id}}</mat-icon>
+            <span class="name">{{ fileItems.back.name }}</span>
+        </li>
+        <li class="item" (click)="clickHandler($event, fileItems.next)">
+            <mat-icon svgIcon="{{fileItems.next.id}}">{{fileItems.next.id}}</mat-icon>
+            <span class="name">{{ fileItems.next.name }}</span>
+        </li>
+    </ul>
+</div>
+<mat-divider></mat-divider>
 <div app-properties-panel></div>
